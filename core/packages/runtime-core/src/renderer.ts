@@ -358,6 +358,7 @@ function baseCreateRenderer(
 
   // Note: functions inside this closure should use `const xxx = () => {}`
   // style in order to prevent being inlined by minifiers.
+  // From: render
   const patch: PatchFn = (
     n1,
     n2,
@@ -384,7 +385,7 @@ function baseCreateRenderer(
       optimized = false
       n2.dynamicChildren = null
     }
-
+    // 解构出新节点的type、ref、shpaeFlag(通过位运算判断类型)
     const { type, ref, shapeFlag } = n2
     switch (type) {
       case Text:
@@ -427,6 +428,8 @@ function baseCreateRenderer(
             optimized
           )
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          // 因为第一次进来的是根组件，因此会走这里，组件类型
+          // From: 首次挂载根组件的patch
           processComponent(
             n1,
             n2,
