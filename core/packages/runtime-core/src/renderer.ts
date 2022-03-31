@@ -1212,6 +1212,7 @@ function baseCreateRenderer(
   ) => {
     // 2.x compat may pre-create the component instance before actually
     // mounting
+
     // createComponentInstance创建组件实例
     // To: createComponentInstance创建组件实例  
     // Return From createComponentInstance: 得到返回的instance组件实例
@@ -1235,7 +1236,7 @@ function baseCreateRenderer(
     }
 
     // inject renderer internals for keepAlive
-    // keepAlive先忽略，之后看
+    //todo mountComponent内部的keepAlive先忽略，之后看
     if (isKeepAlive(initialVNode)) {
       ;(instance.ctx as KeepAliveContext).renderer = internals
     }
@@ -1247,7 +1248,7 @@ function baseCreateRenderer(
         startMeasure(instance, `init`)
       }
       // 执行setupComponent
-      //todo To: setupComponent
+      // To: setupComponent
       setupComponent(instance)
       // 忽略
       if (__DEV__) {

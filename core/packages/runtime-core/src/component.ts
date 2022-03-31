@@ -580,22 +580,29 @@ export function isStatefulComponent(instance: ComponentInternalInstance) {
 }
 
 export let isInSSRComponentSetup = false
-
+// From: mountCompoent 创建组件实例之后
 export function setupComponent(
   instance: ComponentInternalInstance,
   isSSR = false
 ) {
+  // ssr服务端渲染有关，忽略
   isInSSRComponentSetup = isSSR
-  
+  // 从组件实例的vnode中解构出props和children属性
   const { props, children } = instance.vnode
+  // From: setupComponent
   const isStateful = isStatefulComponent(instance)
+  //todo To: initProps
   initProps(instance, props, isStateful, isSSR)
+  //todo To: initSlots
   initSlots(instance, children)
 
+  // From: setupComponent
+  // To: setupStatefulComponent
   const setupResult = isStateful
     ? setupStatefulComponent(instance, isSSR)
     : undefined
   isInSSRComponentSetup = false
+  // 返回setupResult
   return setupResult
 }
 
