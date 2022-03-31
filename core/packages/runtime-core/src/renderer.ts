@@ -2306,16 +2306,23 @@ function baseCreateRenderer(
     }
     return hostNextSibling((vnode.anchor || vnode.el)!)
   }
-
+  // From: mount
   const render: RootRenderFunction = (vnode, container, isSVG) => {
+    // 判断vnode
     if (vnode == null) {
+      // 如果vnode(新节点)是空的，并且container._vnode(老节点)存在
       if (container._vnode) {
+        // 卸载老节点
         unmount(container._vnode, null, null, true)
       }
     } else {
+      // 如果vnode存在，执行patch
+      // From: render
       patch(container._vnode || null, vnode, container, null, null, null, isSVG)
     }
+    // 涉及渲染任务队列，之后再看
     flushPostFlushCbs()
+    // 将新节点标记为老节点，以便下一次渲染
     container._vnode = vnode
   }
 
