@@ -1156,6 +1156,7 @@ function baseCreateRenderer(
     }
   }
 
+  // From: 组件类型的patch
   const processComponent = (
     n1: VNode | null,
     n2: VNode,
@@ -1168,7 +1169,10 @@ function baseCreateRenderer(
     optimized: boolean
   ) => {
     n2.slotScopeIds = slotScopeIds
+    // 判断n1
     if (n1 == null) {
+      // 如果n1为空
+      // 涉及keepAlive组件，先不管，不会走这里
       if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
         ;(parentComponent!.ctx as KeepAliveContext).activate(
           n2,
@@ -1178,6 +1182,8 @@ function baseCreateRenderer(
           optimized
         )
       } else {
+        // 首次挂载组件时，n1也就是老节点，肯定是null，因此执行mountComponent
+        // From: 老节点不存在时的processComponent
         mountComponent(
           n2,
           container,
@@ -1189,6 +1195,8 @@ function baseCreateRenderer(
         )
       }
     } else {
+      // 老节点存在的话，就updateComponent更新
+      // From: 老节点存在时的processComponent
       updateComponent(n1, n2, optimized)
     }
   }
