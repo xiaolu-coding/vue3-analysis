@@ -75,13 +75,16 @@ export const createApp = ((...args) => {
     injectNativeTagCheck(app)
     injectCompilerOptionsCheck(app)
   }
-
+  // 解构出app实例中的mount方法，这样做的目的是添加副作用，
   const { mount } = app
   app.mount = (containerOrSelector: Element | ShadowRoot | string): any => {
+    // To: normalizeContainer
+    // Return From normalizeContainer: 返回一个dom元素
     const container = normalizeContainer(containerOrSelector)
     if (!container) return
 
     const component = app._component
+    // 添加的副作用
     if (!isFunction(component) && !component.render && !component.template) {
       // __UNSAFE__
       // Reason: potential execution of JS expressions in in-DOM template.
@@ -105,6 +108,8 @@ export const createApp = ((...args) => {
 
     // clear content before mounting
     container.innerHTML = ''
+    // To: mount 
+    // 执行mount方法，此方法就是之前解构出来的，在core\packages\runtime-core\src\apiCreateApp.ts路径下的function mount
     const proxy = mount(container, false, container instanceof SVGElement)
     if (container instanceof Element) {
       container.removeAttribute('v-cloak')
@@ -182,18 +187,25 @@ function injectCompilerOptionsCheck(app: App) {
   }
 }
 
+// From createApp内部的app.mount内部: 根据参数是否是字符串来返回不同的结果
+// Return To : 如果参数是字符串，返回querySelector获取的dom元素，如果不是字符串，直接返回参数(其实就是对要挂载的参数进行处理)
 function normalizeContainer(
   container: Element | ShadowRoot | string
 ): Element | null {
+  // 判断container是否是字符串
   if (isString(container)) {
+    // 如果是字符串，通过querySelector获取到dom元素
     const res = document.querySelector(container)
+    // dev忽略即可
     if (__DEV__ && !res) {
       warn(
         `Failed to mount app: mount target selector "${container}" returned null.`
       )
     }
+    // 返回拿到的dom元素
     return res
   }
+  // dev忽略即可
   if (
     __DEV__ &&
     window.ShadowRoot &&
@@ -204,6 +216,7 @@ function normalizeContainer(
       `mounting on a ShadowRoot with \`{mode: "closed"}\` may lead to unpredictable bugs`
     )
   }
+  // 如果不是字符串，直接返回container
   return container as any
 }
 
