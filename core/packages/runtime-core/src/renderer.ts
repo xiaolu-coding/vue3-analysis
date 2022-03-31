@@ -1213,7 +1213,8 @@ function baseCreateRenderer(
     // 2.x compat may pre-create the component instance before actually
     // mounting
     // createComponentInstance创建组件实例
-    //todo To: createComponentInstance创建组件实例  
+    // To: createComponentInstance创建组件实例  
+    // Return From createComponentInstance: 得到返回的instance组件实例
     const compatMountInstance =
       __COMPAT__ && initialVNode.isCompatRoot && initialVNode.component
     const instance: ComponentInternalInstance =

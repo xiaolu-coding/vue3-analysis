@@ -446,6 +446,8 @@ const emptyAppContext = createAppContext()
 
 let uid = 0
 
+// From: mountComponent
+// Return To mountComponent: 返回创建的instance组件实例
 export function createComponentInstance(
   vnode: VNode,
   parent: ComponentInternalInstance | null,
@@ -455,7 +457,7 @@ export function createComponentInstance(
   // inherit parent app context - or - if root, adopt from root vnode
   const appContext =
     (parent ? parent.appContext : vnode.appContext) || emptyAppContext
-
+  // 创建instance对象
   const instance: ComponentInternalInstance = {
     uid: uid++,
     vnode,
@@ -543,7 +545,7 @@ export function createComponentInstance(
   if (vnode.ce) {
     vnode.ce(instance)
   }
-
+  // 返回instance组件实例
   return instance
 }
 
@@ -909,10 +911,11 @@ export function createSetupContext(
     }
   }
 }
+
 // From mount: 
 // Return To mount: 现在推测为对expose的处理
 export function getExposeProxy(instance: ComponentInternalInstance) {
-  //Todo 判断是否有expose 
+  //todo To: getExposeProxy
   if (instance.exposed) {
     return (
       instance.exposeProxy ||
