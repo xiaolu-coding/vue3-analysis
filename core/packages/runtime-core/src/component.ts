@@ -909,8 +909,10 @@ export function createSetupContext(
     }
   }
 }
-
+// From mount: 
+// Return To mount: 现在推测为对expose的处理
 export function getExposeProxy(instance: ComponentInternalInstance) {
+  //Todo 判断是否有expose 
   if (instance.exposed) {
     return (
       instance.exposeProxy ||

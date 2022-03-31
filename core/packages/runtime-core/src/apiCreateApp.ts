@@ -273,13 +273,15 @@ export function createAppAPI<HostElement>(
         context.directives[name] = directive
         return app
       },
-
+      // From app.mount内部解构的mount执行
       mount(
         rootContainer: HostElement,
         isHydrate?: boolean,
         isSVG?: boolean
       ): any {
+        // 判断isMounted, 是否已挂载
         if (!isMounted) {
+          // 如果还未挂载，通过createVNode创建vnode 虚拟节点
           const vnode = createVNode(
             rootComponent as ConcreteComponent,
             rootProps
@@ -289,17 +291,21 @@ export function createAppAPI<HostElement>(
           vnode.appContext = context
 
           // HMR root reload
+          // dev忽略
           if (__DEV__) {
             context.reload = () => {
               render(cloneVNode(vnode), rootContainer, isSVG)
             }
-          }  
-
+          }
+          // hydrate涉及服务端渲染，忽略
           if (isHydrate && hydrate) {
             hydrate(vnode as VNode<Node, Element>, rootContainer as any)
           } else {
+            // 会走这个分支，执行render方法
+            // From: mount
             render(vnode, rootContainer, isSVG)
           }
+          // 将isMounted设置为true，代表已经挂载
           isMounted = true
           app._container = rootContainer
           // for devtools and telemetry
@@ -309,7 +315,7 @@ export function createAppAPI<HostElement>(
             app._instance = vnode.component
             devtoolsInitApp(app, version)
           }
-
+          // 根据getExposeProxy的返回值判断 返回vnode.component
           return getExposeProxy(vnode.component!) || vnode.component!.proxy
         } else if (__DEV__) {
           warn(
