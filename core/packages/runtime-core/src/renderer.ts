@@ -1200,7 +1200,7 @@ function baseCreateRenderer(
       updateComponent(n1, n2, optimized)
     }
   }
-
+  // From: 老节点不存在时的processComponent
   const mountComponent: MountComponentFn = (
     initialVNode,
     container,
@@ -1212,6 +1212,8 @@ function baseCreateRenderer(
   ) => {
     // 2.x compat may pre-create the component instance before actually
     // mounting
+    // createComponentInstance创建组件实例
+    //todo To: createComponentInstance创建组件实例  
     const compatMountInstance =
       __COMPAT__ && initialVNode.isCompatRoot && initialVNode.component
     const instance: ComponentInternalInstance =
@@ -1221,27 +1223,32 @@ function baseCreateRenderer(
         parentComponent,
         parentSuspense
       ))
-
+    // dev忽略
     if (__DEV__ && instance.type.__hmrId) {
       registerHMR(instance)
     }
-
+    // dev忽略
     if (__DEV__) {
       pushWarningContext(initialVNode)
       startMeasure(instance, `mount`)
     }
 
     // inject renderer internals for keepAlive
+    // keepAlive先忽略，之后看
     if (isKeepAlive(initialVNode)) {
       ;(instance.ctx as KeepAliveContext).renderer = internals
     }
 
     // resolve props and slots for setup context
     if (!(__COMPAT__ && compatMountInstance)) {
+      // 忽略
       if (__DEV__) {
         startMeasure(instance, `init`)
       }
+      // 执行setupComponent
+      //todo To: setupComponent
       setupComponent(instance)
+      // 忽略
       if (__DEV__) {
         endMeasure(instance, `init`)
       }
@@ -1249,6 +1256,7 @@ function baseCreateRenderer(
 
     // setup() is async. This component relies on async logic to be resolved
     // before proceeding
+    // 忽略
     if (__FEATURE_SUSPENSE__ && instance.asyncDep) {
       parentSuspense && parentSuspense.registerDep(instance, setupRenderEffect)
 
@@ -1260,7 +1268,8 @@ function baseCreateRenderer(
       }
       return
     }
-
+    // 执行setupRenderEffect
+    //todo To: setupRenderEffect 
     setupRenderEffect(
       instance,
       initialVNode,
@@ -1270,7 +1279,7 @@ function baseCreateRenderer(
       isSVG,
       optimized
     )
-
+    // 忽略
     if (__DEV__) {
       popWarningContext()
       endMeasure(instance, `mount`)
