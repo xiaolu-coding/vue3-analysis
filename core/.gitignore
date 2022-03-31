@@ -1,0 +1,16 @@
+dist
+.DS_Store
+node_modules
+coverage
+temp
+explorations
+TODOs.md
+*.log
+.idea
+.vscode
+.github
+.eslintrc.js
+.prettierrc
+.api-extractor
+.jest.config.jest
+.netify.toml
