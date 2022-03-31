@@ -173,7 +173,7 @@ export type CreateAppFunction<HostElement> = (
 ) => App<HostElement>
 
 let uid = 0
-
+// From baseCreateRenderer: 返回一个createApp函数，此createApp函数返回的是带有mount一系列方法的app实例
 export function createAppAPI<HostElement>(
   render: RootRenderFunction,
   hydrate?: RootHydrateFunction

@@ -38,7 +38,9 @@ const rendererOptions = extend({ patchProp }, nodeOps)
 let renderer: Renderer<Element | ShadowRoot> | HydrationRenderer
 
 let enabledHydration = false
-
+// From: createApp方法: ensureRenderer方法返回渲染器，此渲染器由createRenderer方法返回
+// To: createRenderer (runtime-core -> src/renderer.ts)
+// Return From createRenderer: 返回一个带有render、hydrate、createApp的对象，此对象就是渲染器
 function ensureRenderer() {
   return (
     renderer ||
@@ -62,8 +64,11 @@ export const render = ((...args) => {
 export const hydrate = ((...args) => {
   ensureHydrationRenderer().hydrate(...args)
 }) as RootHydrateFunction
-
-export const createApp = ((...args) => {  
+// start: 从todomvc的断点进来就是这里
+// 1. 调用ensureRenderer方法，并从这个方法的返回值调用返回值拥有的createApp方法    To: ensureRenderer
+// 2. Return from ensureRenderer: 返回一个渲染器对象，此对象上有render、hydrate、createApp方法
+export const createApp = ((...args) => {
+  // 调用渲染器的createApp方法，也就是执行core\packages\runtime-core\src\apiCreateApp.ts路径下的function createApp
   const app = ensureRenderer().createApp(...args)
 
   if (__DEV__) {

@@ -289,6 +289,10 @@ export const queuePostRenderEffect = __FEATURE_SUSPENSE__
  * })
  * ```
  */
+
+// From ensureRenderer: 返回baseCreateRenderer方法的返回值
+// To: baseCreateRenderer
+// Return From baseCreateRenderer: 返回baseCreateRenderer返回的包含render、hydrate、createApp(经过createAppAPI调用后返回的createApp)方法的对象
 export function createRenderer<
   HostNode = RendererNode,
   HostElement = RendererElement
@@ -318,6 +322,9 @@ function baseCreateRenderer(
 ): HydrationRenderer
 
 // implementation
+// From createRenderer: 返回一个包含render、hydrate、create: createAppAPI(render)三个方法的对象
+// To: createAppAPI(./apiCreateApp)
+// Return From createAppAPI: createAppAPI()执行之后返回一个create函数，这个函数的作用是创建一个带有mount一系列方法的app实例
 function baseCreateRenderer(
   options: RendererOptions,
   createHydrationFns?: typeof createHydrationFunctions
