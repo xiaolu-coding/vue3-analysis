@@ -574,8 +574,10 @@ export function validateComponentName(name: string, config: AppConfig) {
     )
   }
 }
-
+// From: setupComponent
+// Return To: setupComponent 判断是否是stateful组件
 export function isStatefulComponent(instance: ComponentInternalInstance) {
+  // 返回组件是否是stateful组件
   return instance.vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT
 }
 
@@ -590,6 +592,8 @@ export function setupComponent(
   // 从组件实例的vnode中解构出props和children属性
   const { props, children } = instance.vnode
   // From: setupComponent
+  // To: isStatefulComponent
+  // Return From isStatefulComponent: 判断insatce组件实例是否是stateful，一般都是(函数组件除
   const isStateful = isStatefulComponent(instance)
   //todo To: initProps
   initProps(instance, props, isStateful, isSSR)
@@ -611,7 +615,7 @@ function setupStatefulComponent(
   isSSR: boolean
 ) {
   const Component = instance.type as ComponentOptions
-
+  // dev忽略
   if (__DEV__) {
     if (Component.name) {
       validateComponentName(Component.name, instance.appContext.config)
@@ -640,18 +644,24 @@ function setupStatefulComponent(
   instance.accessCache = Object.create(null)
   // 1. create public instance / render proxy
   // also mark it raw so it's never observed
+  //todo To: markRaw
   instance.proxy = markRaw(new Proxy(instance.ctx, PublicInstanceProxyHandlers))
+  // dev忽略
   if (__DEV__) {
     exposePropsOnRenderContext(instance)
   }
   // 2. call setup()
+  // 解构出setup
   const { setup } = Component
+  // 判断setup
   if (setup) {
+    // 如果setup存在， 判断setup参数的长度，如果大于1，初始化setupContext
     const setupContext = (instance.setupContext =
       setup.length > 1 ? createSetupContext(instance) : null)
 
     setCurrentInstance(instance)
     pauseTracking()
+    // 调用setup，将返回值赋值给setupResult，这就是我们用户写的setup的返回值
     const setupResult = callWithErrorHandling(
       setup,
       instance,
@@ -660,7 +670,7 @@ function setupStatefulComponent(
     )
     resetTracking()
     unsetCurrentInstance()
-
+    // 判断是否是promise，一般不是
     if (isPromise(setupResult)) {
       setupResult.then(unsetCurrentInstance, unsetCurrentInstance)
 
@@ -684,9 +694,15 @@ function setupStatefulComponent(
         )
       }
     } else {
+      // 因此走这里
+      // From: setupStatefulComponent
+      // To: handleSetupResult
       handleSetupResult(instance, setupResult, isSSR)
     }
   } else {
+    // 如果setup不存在，则直接走这里
+    // From: setupStatefulComponent
+    // To: finishComponentSetup
     finishComponentSetup(instance, isSSR)
   }
 }
