@@ -1405,7 +1405,7 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `render`)
           }
-          // 执行renderComponentRoot
+          // 执行renderComponentRoot 转换为vnode
           // To: renderComponentRoot
           const subTree = (instance.subTree = renderComponentRoot(instance))
           if (__DEV__) {
@@ -1414,7 +1414,7 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `patch`)
           }
-          // 执行patch
+          // 执行patch，n1为null，执行挂载分支
           // To: patch
           patch(
             null,
@@ -1519,6 +1519,7 @@ function baseCreateRenderer(
         if (__DEV__) {
           startMeasure(instance, `render`)
         }
+        // render，转换为vnode
         const nextTree = renderComponentRoot(instance)
         if (__DEV__) {
           endMeasure(instance, `render`)
@@ -1529,6 +1530,7 @@ function baseCreateRenderer(
         if (__DEV__) {
           startMeasure(instance, `patch`)
         }
+        // patch，n1不为空，执行更新分支
         patch(
           prevTree,
           nextTree,
@@ -1582,13 +1584,15 @@ function baseCreateRenderer(
     }
 
     // create reactive effect for rendering
-    // 创建更新机制
+    // 创建更新机制 当发生更新时，触发依赖，这里就会执行上面注册的componentUpdateFn函数去更新
+    //todo To: new ReactiveEffect & queueJob
     const effect = (instance.effect = new ReactiveEffect(
       componentUpdateFn,
       () => queueJob(instance.update),
       instance.scope // track it in component's effect scope
     ))
-    
+    // 通过effect.run拿到我们的componentUpdateFn函数
+    //todo To: effect
     const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
     update.id = instance.uid
     // allowRecurse
@@ -1606,6 +1610,7 @@ function baseCreateRenderer(
       update.ownerInstance = instance
     }
     // 首次更新视图
+    // 执行一次componentUpdateFn，因为首次挂载，没有更新，所以直接进行render，patch渲染视图
     update()
   }
 
