@@ -1323,7 +1323,7 @@ function baseCreateRenderer(
       instance.vnode = n2
     }
   }
-
+  // From: mountComponent
   const setupRenderEffect: SetupRenderEffectFn = (
     instance,
     initialVNode,
@@ -1333,6 +1333,7 @@ function baseCreateRenderer(
     isSVG,
     optimized
   ) => {
+    // 创建更新函数
     const componentUpdateFn = () => {
       // 判断mounted
       if (!instance.isMounted) {
@@ -1581,12 +1582,13 @@ function baseCreateRenderer(
     }
 
     // create reactive effect for rendering
+    // 创建更新机制
     const effect = (instance.effect = new ReactiveEffect(
       componentUpdateFn,
       () => queueJob(instance.update),
       instance.scope // track it in component's effect scope
     ))
-
+    
     const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
     update.id = instance.uid
     // allowRecurse
@@ -1603,7 +1605,7 @@ function baseCreateRenderer(
       // @ts-ignore (for scheduler)
       update.ownerInstance = instance
     }
-
+    // 首次更新视图
     update()
   }
 
