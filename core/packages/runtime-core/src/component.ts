@@ -706,12 +706,13 @@ function setupStatefulComponent(
     finishComponentSetup(instance, isSSR)
   }
 }
-
+// From: setupStatefulComponent
 export function handleSetupResult(
   instance: ComponentInternalInstance,
   setupResult: unknown,
   isSSR: boolean
 ) {
+  // 判断setupResult是否是函数
   if (isFunction(setupResult)) {
     // setup returned an inline render function
     if (__SSR__ && (instance.type as ComponentOptions).__ssrInlineRender) {
@@ -719,6 +720,7 @@ export function handleSetupResult(
       // set it as ssrRender instead.
       instance.ssrRender = setupResult
     } else {
+      // 如果是函数，那就是用户自己写的render函数，赋值给instance.render
       instance.render = setupResult as InternalRenderFunction
     }
   } else if (isObject(setupResult)) {
@@ -733,6 +735,7 @@ export function handleSetupResult(
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
       instance.devtoolsRawSetupState = setupResult
     }
+    // 如果是对象，直接把值赋给instance.setupState，这就是用户的setup内部的状态
     instance.setupState = proxyRefs(setupResult)
     if (__DEV__) {
       exposeSetupStateOnRenderContext(instance)
@@ -744,6 +747,8 @@ export function handleSetupResult(
       }`
     )
   }
+  // From: handleSetupResult
+  // 执行finishComponentSetup
   finishComponentSetup(instance, isSSR)
 }
 
