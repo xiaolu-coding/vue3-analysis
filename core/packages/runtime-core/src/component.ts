@@ -583,6 +583,7 @@ export function isStatefulComponent(instance: ComponentInternalInstance) {
 
 export let isInSSRComponentSetup = false
 // From: mountCompoent 创建组件实例之后
+// Return To mountComponent: 初始化组件实例，得到setupState、render函数以及对vue2.0做处理 还有initSlots initProps
 export function setupComponent(
   instance: ComponentInternalInstance,
   isSSR = false
@@ -602,6 +603,7 @@ export function setupComponent(
 
   // From: setupComponent
   // To: setupStatefulComponent
+  // Return From setupStatefulComponent: instance实例上有了setupState和render函数，并对vue2.0做处理
   const setupResult = isStateful
     ? setupStatefulComponent(instance, isSSR)
     : undefined
@@ -609,7 +611,9 @@ export function setupComponent(
   // 返回setupResult
   return setupResult
 }
-
+// From: setupComponent
+// Return To setupComponent: 初始化组件实例，根据setup参数初始化setupContext，调用setup，返回值是setupResult
+// 然后对setupResult进行handleSetupResult处理: instance实例上获得setupState 和 render函数，并对vue2.0做处理
 function setupStatefulComponent(
   instance: ComponentInternalInstance,
   isSSR: boolean
@@ -656,6 +660,7 @@ function setupStatefulComponent(
   // 判断setup
   if (setup) {
     // 如果setup存在， 判断setup参数的长度，如果大于1，初始化setupContext
+    //todo To: createSetupContext
     const setupContext = (instance.setupContext =
       setup.length > 1 ? createSetupContext(instance) : null)
 
@@ -697,16 +702,20 @@ function setupStatefulComponent(
       // 因此走这里
       // From: setupStatefulComponent
       // To: handleSetupResult
+      // Return From handleSetupResult: instance实例上获得setupState 和 render函数，并对vue2.0做处理
       handleSetupResult(instance, setupResult, isSSR)
     }
   } else {
     // 如果setup不存在，则直接走这里
     // From: setupStatefulComponent
     // To: finishComponentSetup
+    // Return From finishComponentSetup: 初始化render函数，并对vue2.0做处理
     finishComponentSetup(instance, isSSR)
   }
 }
 // From: setupStatefulComponent
+// Return To setupStatefulComponent: 根据setupResult的类型初始化，如果是函数，
+// 就赋值给render，如果是对象，就赋值给setupState，最后执行finishComponentSetup获得render函数，并对vue2.0做一些处理
 export function handleSetupResult(
   instance: ComponentInternalInstance,
   setupResult: unknown,

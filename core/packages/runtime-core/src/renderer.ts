@@ -1249,6 +1249,7 @@ function baseCreateRenderer(
       }
       // 执行setupComponent
       // To: setupComponent
+      // Return From setupComponent: 此时instance已经初始化了props,slots,render, setupstate,setupContext这些属性以及对vue2做了处理
       setupComponent(instance)
       // 忽略
       if (__DEV__) {
