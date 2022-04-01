@@ -1272,7 +1272,7 @@ function baseCreateRenderer(
       return
     }
     // 执行setupRenderEffect
-    //todo To: setupRenderEffect 
+    // To: setupRenderEffect
     setupRenderEffect(
       instance,
       initialVNode,
@@ -1334,12 +1334,16 @@ function baseCreateRenderer(
     optimized
   ) => {
     const componentUpdateFn = () => {
+      // 判断mounted
       if (!instance.isMounted) {
+        // 如果mounted为false
         let vnodeHook: VNodeHook | null | undefined
+        // 获取el和props
         const { el, props } = initialVNode
+        // 获取beforeMounted mounted钩子和parent
         const { bm, m, parent } = instance
         const isAsyncWrapperVNode = isAsyncWrapper(initialVNode)
-
+        //todo  To: toggleRecurse
         toggleRecurse(instance, false)
         // beforeMount hook
         if (bm) {
@@ -1400,6 +1404,8 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `render`)
           }
+          // 执行renderComponentRoot
+          // To: renderComponentRoot
           const subTree = (instance.subTree = renderComponentRoot(instance))
           if (__DEV__) {
             endMeasure(instance, `render`)
@@ -1407,6 +1413,8 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `patch`)
           }
+          // 执行patch
+          // To: patch
           patch(
             null,
             subTree,
@@ -1461,6 +1469,7 @@ function baseCreateRenderer(
             )
           }
         }
+        // isMounted置为true，之后进来就走unpate分支了
         instance.isMounted = true
 
         if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
