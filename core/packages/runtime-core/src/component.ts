@@ -748,6 +748,7 @@ export function handleSetupResult(
     )
   }
   // From: handleSetupResult
+  // Return From finishComponentSetup: 得到render函数, instance.render，并对vue2.0做了一些处理
   // 执行finishComponentSetup
   finishComponentSetup(instance, isSSR)
 }
@@ -775,7 +776,8 @@ export function registerRuntimeCompiler(_compile: any) {
 
 // dev only
 export const isRuntimeOnly = () => !compile
-
+// From: handleSetupResult
+// Return To handleSetupResult: 创建render函数，在instance.render上，并对vue2.0做了一些处理
 export function finishComponentSetup(
   instance: ComponentInternalInstance,
   isSSR: boolean,
@@ -796,16 +798,21 @@ export function finishComponentSetup(
   if (!instance.render) {
     // only do on-the-fly compile if not in SSR - SSR on-the-fly compilation
     // is done by server-renderer
+    // 如果不是srr compile存在， render函数不存在
     if (!isSSR && compile && !Component.render) {
+      // 获取template
       const template =
         (__COMPAT__ &&
           instance.vnode.props &&
           instance.vnode.props['inline-template']) ||
         Component.template
+      // 判断template
       if (template) {
+        // dev忽略
         if (__DEV__) {
           startMeasure(instance, `compile`)
         }
+        // 获取配置
         const { isCustomElement, compilerOptions } = instance.appContext.config
         const { delimiters, compilerOptions: componentCompilerOptions } =
           Component
@@ -826,13 +833,15 @@ export function finishComponentSetup(
             extend(finalCompilerOptions.compatConfig, Component.compatConfig)
           }
         }
+        // 通过compile编译器将template转换为render函数
+        //todo To: compile(编译器)
         Component.render = compile(template, finalCompilerOptions)
         if (__DEV__) {
           endMeasure(instance, `compile`)
         }
       }
     }
-
+    // 赋值instance.render
     instance.render = (Component.render || NOOP) as InternalRenderFunction
 
     // for runtime-compiled render functions using `with` blocks, the render
@@ -844,9 +853,11 @@ export function finishComponentSetup(
   }
 
   // support for 2.x options
+  // 对vue2.0的支持
   if (__FEATURE_OPTIONS_API__ && !(__COMPAT__ && skipOptions)) {
     setCurrentInstance(instance)
     pauseTracking()
+    //todo To: applyOptions
     applyOptions(instance)
     resetTracking()
     unsetCurrentInstance()
