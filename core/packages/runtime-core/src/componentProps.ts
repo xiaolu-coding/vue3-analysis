@@ -158,10 +158,14 @@ export function initProps(
 ) {
   const props: Data = {}
   const attrs: Data = {}
+  // From initProps:
+  // To def:
+  // Retrun From def: attrs的key不可枚举，值为1
   def(attrs, InternalObjectKey, 1)
-
+  // 创建空对象
   instance.propsDefaults = Object.create(null)
-
+  // From initProps:
+  // To setFullProps:
   setFullProps(instance, rawProps, props, attrs)
 
   // ensure all declared prop keys are present
@@ -324,7 +328,9 @@ export function updateProps(
     validateProps(rawProps || {}, props, instance)
   }
 }
-
+// From initProps:
+// Return From resolvePropValue: 处理Default
+// Return To initProps: 拆分props、attrs，并对default做了处理，prop大小写进行了处理
 function setFullProps(
   instance: ComponentInternalInstance,
   rawProps: Data | null,
@@ -337,6 +343,14 @@ function setFullProps(
   if (rawProps) {
     for (let key in rawProps) {
       // key, ref are reserved and never passed down
+      // 键，ref是保留的，永远不会传下去
+      // From setFullProps:
+      // To isReservedProp:
+      // Return From isReservedProp: 判断key是否在
+      // ‘key,ref,ref_for,ref_key,' +
+      // 'onVnodeBeforeMount,onVnodeMounted,' +
+      // 'onVnodeBeforeUpdate,onVnodeUpdated,' +
+      //  'onVnodeBeforeUnmount,onVnodeUnmounted' 这里面，如果在里面，也就是ref，保留
       if (isReservedProp(key)) {
         continue
       }
@@ -353,21 +367,30 @@ function setFullProps(
           continue
         }
       }
-
+      // 取出属性的值
       const value = rawProps[key]
       // prop option names are camelized during normalization, so to support
       // kebab -> camel conversion here we need to camelize the key.
+      // prop选项在规范化过程中被camelized骆驼化，所以为了支持烤羊肉串->骆驼转换，我们需要骆驼化密钥。
       let camelKey
+      // To camelize:
+      // Return From camelize: 正则检测出-并将-后面的字符转大写
+      // 如果options存在，并且options拥有首字母大写后的key，那么就是需要转换的
       if (options && hasOwn(options, (camelKey = camelize(key)))) {
+        // 如果需要转换的key不存在，或者不在需要转换的key包含camlekey
         if (!needCastKeys || !needCastKeys.includes(camelKey)) {
+          // 转换key
           props[camelKey] = value
         } else {
           ;(rawCastValues || (rawCastValues = {}))[camelKey] = value
         }
       } else if (!isEmitListener(instance.emitsOptions, key)) {
+        // 如果不在props和emit里面，那么就到attrs里面去
+
         // Any non-declared (either as a prop or an emitted event) props are put
         // into a separate `attrs` object for spreading. Make sure to preserve
         // original key casing
+        // 任何未声明（作为道具或已发射事件）的道具都会放入单独的“attrs”对象中进行传播。确保保留原钥匙套
         if (__COMPAT__) {
           if (isOn(key) && key.endsWith('Native')) {
             key = key.slice(0, -6) // remove Native postfix
@@ -375,7 +398,9 @@ function setFullProps(
             continue
           }
         }
+        // 如果key不在attrs中
         if (!(key in attrs) || value !== attrs[key]) {
+          // 将key设置为attrs
           attrs[key] = value
           hasAttrsChanged = true
         }
@@ -388,6 +413,9 @@ function setFullProps(
     const castValues = rawCastValues || EMPTY_OBJ
     for (let i = 0; i < needCastKeys.length; i++) {
       const key = needCastKeys[i]
+      // From: setFullProps:
+      // To resolvePropValue :
+      // Return From resolvePropValue: 处理default
       props[key] = resolvePropValue(
         options!,
         rawCurrentProps,
@@ -401,7 +429,8 @@ function setFullProps(
 
   return hasAttrsChanged
 }
-
+// From: setFullProps
+// Return To setFullProps: 处理defaultProps
 function resolvePropValue(
   options: NormalizedProps,
   props: Data,
@@ -410,18 +439,29 @@ function resolvePropValue(
   instance: ComponentInternalInstance,
   isAbsent: boolean
 ) {
+  // 需要cast的key
   const opt = options[key]
+  // 如果不为空
   if (opt != null) {
+    // 判断是否有default
     const hasDefault = hasOwn(opt, 'default')
     // default values
+    // 如果有default，并且value为空
     if (hasDefault && value === undefined) {
+      // 将deafult传给defaultValue
       const defaultValue = opt.default
+      // 如果type不是函数 并且 默认值是函数
       if (opt.type !== Function && isFunction(defaultValue)) {
+        // 解构出propsDefaults
         const { propsDefaults } = instance
+        // 如果key在propsDefaults中
         if (key in propsDefaults) {
+          // 直接拿出值
           value = propsDefaults[key]
         } else {
+          // 如果key不在propsDefaults中
           setCurrentInstance(instance)
+          // 调用默认值函数返回默认值
           value = propsDefaults[key] = defaultValue.call(
             __COMPAT__ &&
               isCompatEnabled(DeprecationTypes.PROPS_DEFAULT_THIS, instance)
@@ -432,6 +472,7 @@ function resolvePropValue(
           unsetCurrentInstance()
         }
       } else {
+        // 默认值赋给值
         value = defaultValue
       }
     }

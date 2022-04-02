@@ -596,7 +596,8 @@ export function setupComponent(
   // To: isStatefulComponent
   // Return From isStatefulComponent: 判断insatce组件实例是否是stateful，一般都是(函数组件除
   const isStateful = isStatefulComponent(instance)
-  //todo To: initProps
+  // To: initProps
+  // Return From initProps: 初始化并拆分props、attrs，并对default做了处理，prop大小写进行了处理
   initProps(instance, props, isStateful, isSSR)
   //todo To: initSlots
   initSlots(instance, children)

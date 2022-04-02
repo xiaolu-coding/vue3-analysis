@@ -81,9 +81,13 @@ export const isIntegerKey = (key: unknown) =>
   key !== 'NaN' &&
   key[0] !== '-' &&
   '' + parseInt(key, 10) === key
-
+// From setFullProps:
+// To makeMap:
+// Return From makeMap: 返回一个函数，用于检查地图中是否有密钥。
+// Return To setFullProps: 所以isReservedProp就是判断那些值是否在这个makeMap的参数中
 export const isReservedProp = /*#__PURE__*/ makeMap(
   // the leading comma is intentional so empty string "" is also included
+  // 前导逗号是故意的，因此还包括空字符串“”
   ',key,ref,ref_for,ref_key,' +
     'onVnodeBeforeMount,onVnodeMounted,' +
     'onVnodeBeforeUpdate,onVnodeUpdated,' +
@@ -93,9 +97,12 @@ export const isReservedProp = /*#__PURE__*/ makeMap(
 export const isBuiltInDirective = /*#__PURE__*/ makeMap(
   'bind,cloak,else-if,else,for,html,if,model,on,once,pre,show,slot,text,memo'
 )
-
+// From camelize:
+// Return To camelize: 正则检测出-并将-后面的字符转大写
 const cacheStringFunction = <T extends (str: string) => string>(fn: T): T => {
+  // 创建一个键类型为string，值类型为string的空对象cache
   const cache: Record<string, string> = Object.create(null)
+  // 返回一个函数，此函数返回传入的函数fn fn是camelize内部传入的正则检测出-并将-后面的字符转大写
   return ((str: string) => {
     const hit = cache[str]
     return hit || (cache[str] = fn(str))
@@ -106,6 +113,10 @@ const camelizeRE = /-(\w)/g
 /**
  * @private
  */
+// From setFullProps: 
+// To cacheStringFunction:
+// Return From cacheStringFunction: 正则检测出-并将-后面的字符转大写
+// Return To setFullProps: 正则检测出-并将-后面的字符转大写
 export const camelize = cacheStringFunction((str: string): string => {
   return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''))
 })
@@ -141,7 +152,8 @@ export const invokeArrayFns = (fns: Function[], arg?: any) => {
     fns[i](arg)
   }
 }
-
+// From initProps:
+// Return To initProps: 不可枚举且值为value
 export const def = (obj: object, key: string | symbol, value: any) => {
   Object.defineProperty(obj, key, {
     configurable: true,
