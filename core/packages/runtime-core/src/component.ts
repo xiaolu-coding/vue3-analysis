@@ -599,7 +599,8 @@ export function setupComponent(
   // To: initProps
   // Return From initProps: 初始化并拆分props、attrs，并对default做了处理，prop大小写进行了处理
   initProps(instance, props, isStateful, isSSR)
-  //todo To: initSlots
+  // To: initSlots
+  // Return From initSlots: 初始化slots
   initSlots(instance, children)
 
   // From: setupComponent

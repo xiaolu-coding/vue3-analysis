@@ -161,6 +161,7 @@ export function initProps(
   // From initProps:
   // To def:
   // Retrun From def: attrs的key不可枚举，值为1
+  // 就是在attrs上定义了一个标记 __vInternal: 1
   def(attrs, InternalObjectKey, 1)
   // 创建空对象
   instance.propsDefaults = Object.create(null)
@@ -179,11 +180,13 @@ export function initProps(
   if (__DEV__) {
     validateProps(rawProps || {}, props, instance)
   }
-
+  // 是否是稳定状态
   if (isStateful) {
     // stateful
+    // 对Props做shallowReactive浅响应式
     instance.props = isSSR ? props : shallowReactive(props)
   } else {
+    // 如果不是稳定状态，函数组件
     if (!instance.type.props) {
       // functional w/ optional props, props === attrs
       instance.props = attrs
@@ -192,6 +195,7 @@ export function initProps(
       instance.props = props
     }
   }
+  // 赋值attrs
   instance.attrs = attrs
 }
 
