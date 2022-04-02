@@ -662,7 +662,8 @@ function setupStatefulComponent(
   // 判断setup
   if (setup) {
     // 如果setup存在， 判断setup参数的长度，如果大于1，初始化setupContext
-    //todo To: createSetupContext
+    // To: createSetupContext
+    // Return From createSetupContext: 初始化setupContext对象, 包含attrs slots emit expose
     const setupContext = (instance.setupContext =
       setup.length > 1 ? createSetupContext(instance) : null)
 
@@ -924,10 +925,12 @@ function createAttrsProxy(instance: ComponentInternalInstance): Data {
         }
   )
 }
-
+// From setupStatefulComponent:
+// Return To setupStatefulComponent: 返回包含attrs slots emit expose的对象
 export function createSetupContext(
   instance: ComponentInternalInstance
 ): SetupContext {
+  // 初始化expose
   const expose: SetupContext['expose'] = exposed => {
     if (__DEV__ && instance.exposed) {
       warn(`expose() should be called only once per setup().`)
@@ -952,6 +955,7 @@ export function createSetupContext(
       expose
     })
   } else {
+    // 返回包含attrs slots emit expose的对象
     return {
       get attrs() {
         return attrs || (attrs = createAttrsProxy(instance))
