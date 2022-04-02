@@ -970,8 +970,9 @@ export function createSetupContext(
 // From mount: 
 // Return To mount: 现在推测为对expose的处理
 export function getExposeProxy(instance: ComponentInternalInstance) {
-  //todo To: getExposeProxy
+  // 判断exposed是否存在
   if (instance.exposed) {
+    //todo To: 返回通过proxyRefs 和markRaw处理的
     return (
       instance.exposeProxy ||
       (instance.exposeProxy = new Proxy(proxyRefs(markRaw(instance.exposed)), {
