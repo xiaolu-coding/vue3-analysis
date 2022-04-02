@@ -540,8 +540,12 @@ function createDuplicateChecker() {
 }
 
 export let shouldCacheAccess = true
-
+// From finishComponentSetup
+// Return To finishComponentSetup: 对Vue2的属性进行处理，比如将vue2的data进行响应式处理(reactive包裹)，计算属性用computed包裹，methods修改this指向，注册生命周期等等
+// 总的来说就是对vue2的兼容处理
 export function applyOptions(instance: ComponentInternalInstance) {
+  // From applyOptions:
+  // To resolveMergedOptions
   const options = resolveMergedOptions(instance)
   const publicThis = instance.proxy! as any
   const ctx = instance.ctx
@@ -551,10 +555,11 @@ export function applyOptions(instance: ComponentInternalInstance) {
 
   // call beforeCreate first before accessing other options since
   // the hook may mutate resolved options (#2791)
+  // 在访问其他选项之前调用beforeCreate first，因为钩子可能会变异已解析的选项
   if (options.beforeCreate) {
     callHook(options.beforeCreate, instance, LifecycleHooks.BEFORE_CREATE)
   }
-
+  // 解构出一系列属性和声明周期
   const {
     // state
     data: dataOptions,
@@ -607,7 +612,15 @@ export function applyOptions(instance: ComponentInternalInstance) {
   // - data (deferred since it relies on `this` access)
   // - computed
   // - watch (deferred since it relies on `this` access)
+  // 选项初始化顺序（与Vue 2一致）:
+  // props (已经在此函数外完成) initProps完成
+  // inject
+  // methods
+  // data (延迟，因为它依赖于`this`访问)
+  // computed
+  // watch (延迟，因为它依赖于`this`访问)
 
+  // 处理inject
   if (injectOptions) {
     resolveInjections(
       injectOptions,
@@ -616,7 +629,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
       instance.appContext.config.unwrapInjectedRef
     )
   }
-
+  // 处理methods，主要是遍历methods修改this执行
   if (methods) {
     for (const key in methods) {
       const methodHandler = (methods as MethodOptions)[key]
@@ -632,6 +645,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
             writable: true
           })
         } else {
+          // 对方法修改this执行
           ctx[key] = methodHandler.bind(publicThis)
         }
         if (__DEV__) {
@@ -645,7 +659,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
       }
     }
   }
-
+  // 处理data，调用dataOptions方法，对返回的对象进行reactvie响应式处理
   if (dataOptions) {
     if (__DEV__ && !isFunction(dataOptions)) {
       warn(
@@ -653,6 +667,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
           `Plain object usage is no longer supported.`
       )
     }
+    // 调用一次data，将返回值传给data，也就是将data(){ return {} }返回的对象赋值给data
     const data = dataOptions.call(publicThis, publicThis)
     if (__DEV__ && isPromise(data)) {
       warn(
@@ -664,6 +679,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
     if (!isObject(data)) {
       __DEV__ && warn(`data() should return an object.`)
     } else {
+      // 对data进行响应式处理
       instance.data = reactive(data)
       if (__DEV__) {
         for (const key in data) {
@@ -684,7 +700,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
 
   // state initialization complete at this point - start caching access
   shouldCacheAccess = true
-
+  // 处理computed，对computed的this指向修改，对get set的处理，并且将其用computed包裹
   if (computedOptions) {
     for (const key in computedOptions) {
       const opt = (computedOptions as ComputedOptions)[key]
@@ -721,13 +737,13 @@ export function applyOptions(instance: ComponentInternalInstance) {
       }
     }
   }
-
+  // 处理watch
   if (watchOptions) {
     for (const key in watchOptions) {
       createWatcher(watchOptions[key], ctx, publicThis, key)
     }
   }
-
+  // 处理provide
   if (provideOptions) {
     const provides = isFunction(provideOptions)
       ? provideOptions.call(publicThis)
@@ -736,11 +752,11 @@ export function applyOptions(instance: ComponentInternalInstance) {
       provide(key, provides[key])
     })
   }
-
+  // created钩子
   if (created) {
     callHook(created, instance, LifecycleHooks.CREATED)
   }
-
+  // 注册生命周期
   function registerLifecycleHook(
     register: Function,
     hook?: Function | Function[]
@@ -751,7 +767,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
       register((hook as Function).bind(publicThis))
     }
   }
-
+  // 注册各种生命周期
   registerLifecycleHook(onBeforeMount, beforeMount)
   registerLifecycleHook(onMounted, mounted)
   registerLifecycleHook(onBeforeUpdate, beforeUpdate)
@@ -779,7 +795,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
       registerLifecycleHook(onUnmounted, destroyed)
     }
   }
-
+  // 处理expose数组
   if (isArray(expose)) {
     if (expose.length) {
       const exposed = instance.exposed || (instance.exposed = {})
@@ -796,14 +812,17 @@ export function applyOptions(instance: ComponentInternalInstance) {
 
   // options that are handled when creating the instance but also need to be
   // applied from mixins
+  // 处理render
   if (render && instance.render === NOOP) {
     instance.render = render as InternalRenderFunction
   }
+  // 处理inheritAttrs
   if (inheritAttrs != null) {
     instance.inheritAttrs = inheritAttrs
   }
 
   // asset options.
+  // 处理components directives
   if (components) instance.components = components as any
   if (directives) instance.directives = directives
   if (
@@ -925,6 +944,8 @@ export function createWatcher(
  * This is done only once per-component since the merging does not involve
  * instances.
  */
+// 解析合并选项并将其缓存在组件上。每个组件只执行一次，因为合并不涉及实例。
+// From applyOptions:
 export function resolveMergedOptions(
   instance: ComponentInternalInstance
 ): MergedComponentOptions {

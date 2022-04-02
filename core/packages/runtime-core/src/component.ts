@@ -866,7 +866,8 @@ export function finishComponentSetup(
   if (__FEATURE_OPTIONS_API__ && !(__COMPAT__ && skipOptions)) {
     setCurrentInstance(instance)
     pauseTracking()
-    //todo To: applyOptions
+    // To: applyOptions
+    // Return From applyOptions: 对Vue2的兼容处理
     applyOptions(instance)
     resetTracking()
     unsetCurrentInstance()
