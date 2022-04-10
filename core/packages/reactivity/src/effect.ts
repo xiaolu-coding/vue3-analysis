@@ -226,15 +226,21 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
       ? { effect: activeEffect, target, type, key }
       : undefined
     // 执行trackEffects，进行依赖的添加
+    // From track:
+    // To trackEffects:
+    // Return From trackEffects: 收集依赖 将activeEffect添加到dep中，并且将dep添加到activeEffect.deps中,deps就是一个与当前副作用函数存在联系的依赖集合，为了在清理时能够知道是否需要清理
     trackEffects(dep, eventInfo)
   }
 }
-
+// From track:
+// Return To track: 将activeEffect添加到dep中，并且将dep添加到activeEffect.deps中,deps就是一个与当前副作用函数存在联系的依赖集合，为了在清理时能够知道是否需要清理
 export function trackEffects(
   dep: Dep,
   debuggerEventExtraInfo?: DebuggerEventExtraInfo
 ) {
+  // 将shouldTrack置为false
   let shouldTrack = false
+  //todo: 涉及响应式性能优化，后面一起来看，先不管，看else
   if (effectTrackDepth <= maxMarkerBits) {
     if (!newTracked(dep)) {
       dep.n |= trackOpBit // set newly tracked
@@ -242,12 +248,17 @@ export function trackEffects(
     }
   } else {
     // Full cleanup mode.
+    // 完全清理模式。
+    // 如果Dep有activeEffect，shouldTrack为false，代表不用收集，如果没有，则需要收集
     shouldTrack = !dep.has(activeEffect!)
   }
-
+  // 判断shouldTrack
   if (shouldTrack) {
+    // 如果shouldTrack为true，则将activeEffect添加到dep中
     dep.add(activeEffect!)
+    // 并且将dep添加到activeEffect.deps中， deps就是一个与当前副作用函数存在联系的依赖集合，为了在清理时能够知道是否需要清理
     activeEffect!.deps.push(dep)
+    // DER忽略
     if (__DEV__ && activeEffect!.onTrack) {
       activeEffect!.onTrack(
         Object.assign(
