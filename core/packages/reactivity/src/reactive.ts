@@ -214,7 +214,7 @@ function createReactiveObject(
     return target
   }
   // target already has corresponding Proxy
-  // 如果对象已经收集了依赖，直接返回，防止反复收集依赖
+  // 如果对象已经收集了依赖，直接返回，防止反复创建代理对象
   const existingProxy = proxyMap.get(target)
   if (existingProxy) {
     return existingProxy
@@ -237,7 +237,7 @@ function createReactiveObject(
     target,
     targetType === TargetType.COLLECTION ? collectionHandlers : baseHandlers
   )
-  // 代理完之后，在proxyMap上收集代理对象，防止反复收集依赖
+  // 代理完之后，在proxyMap上收集代理对象，防止反复创建代理对象
   proxyMap.set(target, proxy)
   // 返回代理
   return proxy
