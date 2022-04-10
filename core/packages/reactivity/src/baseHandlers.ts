@@ -30,7 +30,10 @@ import {
   makeMap
 } from '@vue/shared'
 import { isRef } from './ref'
-
+// From createGetter:
+// To makeMap:
+// Return From makeMap: 用于检查map中是否有对应key
+// Return To createGetter: 检查map中是否有对应key，__proto__,__v_isRef,__isVue
 const isNonTrackableKeys = /*#__PURE__*/ makeMap(`__proto__,__v_isRef,__isVue`)
 
 const builtInSymbols = new Set(
@@ -78,16 +81,21 @@ function createArrayInstrumentations() {
   })
   return instrumentations
 }
-
+// From get:
 function createGetter(isReadonly = false, shallow = false) {
+  // 返回get方法
   return function get(target: Target, key: string | symbol, receiver: object) {
+    // 如果key已经是reactive，返回!isReadonly
     if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly
+      // 如果key已经是readonly，返回isReadonly
     } else if (key === ReactiveFlags.IS_READONLY) {
       return isReadonly
+      // 如果key是shallow，返回shallow
     } else if (key === ReactiveFlags.IS_SHALLOW) {
       return shallow
     } else if (
+      // 用于给Set中屏蔽原型引起的更新(之后会细说)
       key === ReactiveFlags.RAW &&
       receiver ===
         (isReadonly
@@ -101,40 +109,70 @@ function createGetter(isReadonly = false, shallow = false) {
     ) {
       return target
     }
-
+    // 判断target是否是数组
+    // From createGetter:
+    // To isArray:
+    // Retrun From isArray: 返回Array.isArray 判断是否是数组类型
     const targetIsArray = isArray(target)
-
+    // 如果不是只读并且 target是数组类型 并且key存在于arrayInstrumentations上
+    // 那么返回定义在arrayInstrumentations上的方法 也就是重写的数组方法
+    // From: createGetter:
+    // To hasOwn:
+    // Return From hasOwn: 判断对象是否有指定的属性
     if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key)) {
+      // 返回数组方法
+      // From: createGetter:
+      //todo To: arrayInstrumentations
       return Reflect.get(arrayInstrumentations, key, receiver)
     }
-
+    // 使用Reflect是为了第三个参数的this
     const res = Reflect.get(target, key, receiver)
-
+    // 不应该在副作用函数与Symbol这类值之间建立响应联系，
+    // 如果key的类型是symbol，不需要收集依赖，返回
+    // From crateGetter:
+    // To isSymbol:
+    // Return From isSymbol: 判断是否是Symbol类型
+    // To isNonTrackableKeys:
+    // Return From isNonTrackableKeys: 判断是否是非跟踪类型 __proto__,__v_isRef,__isVue
     if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
       return res
     }
-
+    // 如果不是只读，才需要收集依赖，建立响应联系
     if (!isReadonly) {
+      // From createGetter:
+      //todo To: track 
       track(target, TrackOpTypes.GET, key)
     }
-
+    // 如果是shallow浅响应式，返回经过一次依赖收集的res
     if (shallow) {
       return res
     }
-
+    // 如果是Ref，脱Ref
+    // From createGetter:
+    //todo To: isRef 
     if (isRef(res)) {
       // ref unwrapping - does not apply for Array + integer key.
+      // ref unwrapping - 不适用于 Array + integer key。
       const shouldUnwrap = !targetIsArray || !isIntegerKey(key)
+      // 脱ref
       return shouldUnwrap ? res.value : res
     }
-
+    // 如果是对象，根据readonly来决定怎么递归，深只读，深reactive
+    // From createGetter:
+    // To isObject:
+    // Return From isObject: 判断是否是对象类型
     if (isObject(res)) {
       // Convert returned value into a proxy as well. we do the isObject check
       // here to avoid invalid value warning. Also need to lazy access readonly
       // and reactive here to avoid circular dependency.
+      // 也将返回值转换为代理。 我们进行 isObject 检查
+      // 这里是为了避免无效值警告。 还需要惰性访问只读
+      // 并在此处进行反应以避免循环依赖。
+      // From createGetter:
+      //todo To: readonly 
       return isReadonly ? readonly(res) : reactive(res)
     }
-
+    // 最后返回res
     return res
   }
 }
@@ -208,6 +246,7 @@ function ownKeys(target: object): (string | symbol)[] {
 // From createReactiveObject:
 // Return To createReactiveObject: 返回如下方法
 export const mutableHandlers: ProxyHandler<object> = {
+  // To: createGetter
   get,
   set,
   deleteProperty,

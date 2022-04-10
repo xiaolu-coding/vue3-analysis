@@ -40,13 +40,19 @@ export const remove = <T>(arr: T[], el: T) => {
     arr.splice(i, 1)
   }
 }
-
+// From hasOwn:
+// Return To hasOwn: Object.prototype.hasOwnProperty
 const hasOwnProperty = Object.prototype.hasOwnProperty
+// From createGetter:
+// To hasOwnProperty: 
+// Return From hasOwnProperty: Object.prototype.hasOwnProperty
+// Return To createGetter: 判断对象是否有指定的属性
 export const hasOwn = (
   val: object,
   key: string | symbol
 ): key is keyof typeof val => hasOwnProperty.call(val, key)
-
+// From createGetter:
+// Return To createGetter: 返回Array.isArray 判断是否是数组类型
 export const isArray = Array.isArray
 export const isMap = (val: unknown): val is Map<any, any> =>
   toTypeString(val) === '[object Map]'
@@ -57,7 +63,11 @@ export const isDate = (val: unknown): val is Date => val instanceof Date
 export const isFunction = (val: unknown): val is Function =>
   typeof val === 'function'
 export const isString = (val: unknown): val is string => typeof val === 'string'
+// From createGetter:
+// Return To createGetter: 判断是否是symbol类型
 export const isSymbol = (val: unknown): val is symbol => typeof val === 'symbol'
+// From createGetter:
+// Return To createGetter: 判断是否是对象类型
 export const isObject = (val: unknown): val is Record<any, any> =>
   val !== null && typeof val === 'object'
 
