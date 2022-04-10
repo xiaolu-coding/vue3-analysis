@@ -54,8 +54,12 @@ function targetTypeMap(rawType: string) {
       return TargetType.INVALID
   }
 }
-
+// From createReactiveObject:
+// Return To createReactiveObject: 返回target相对应的类型
 function getTargetType(value: Target) {
+  // 如果是Skip或者是不可扩展的对象，直接返回INVALID，否则返回toRawType
+  // To toRawType:
+  // Return From toRawType: 从“[object RawType]”之类的字符串中提取“RawType”
   return value[ReactiveFlags.SKIP] || !Object.isExtensible(value)
     ? TargetType.INVALID
     : targetTypeMap(toRawType(value))
@@ -87,6 +91,7 @@ export type UnwrapNestedRefs<T> = T extends Ref ? T : UnwrapRefSimple<T>
  * ```
  */
 // From setup
+// Return To setup: 返回经过handlers处理后的proxy代理对象target
 export function reactive<T extends object>(target: T): UnwrapNestedRefs<T>
 export function reactive(target: object) {
   // if trying to observe a readonly proxy, return the readonly version.
@@ -95,6 +100,7 @@ export function reactive(target: object) {
     return target
   }
   // To: createReactiveObject
+  // Return From createReactiveObject: 返回经过proxy代理的对象，这个proxy代理取决于handlers
   // 返回createReactiveObject方法调用结果
   return createReactiveObject(
     target,
@@ -181,7 +187,8 @@ export function shallowReadonly<T extends object>(target: T): Readonly<T> {
     shallowReadonlyMap
   )
 }
-
+// From reactive:
+// Reutrn To reactive: 返回经过proxy代理的对象，这个proxy代理取决于handlers
 function createReactiveObject(
   target: Target,
   isReadonly: boolean,
@@ -189,6 +196,7 @@ function createReactiveObject(
   collectionHandlers: ProxyHandler<any>,
   proxyMap: WeakMap<Target, any>
 ) {
+  // 如果不是对象，直接返回
   if (!isObject(target)) {
     if (__DEV__) {
       console.warn(`value cannot be made reactive: ${String(target)}`)
@@ -197,6 +205,8 @@ function createReactiveObject(
   }
   // target is already a Proxy, return it.
   // exception: calling readonly() on a reactive object
+  // 目标已经是一个代理，返回它。
+  // 例外：在反应对象上调用 readonly()
   if (
     target[ReactiveFlags.RAW] &&
     !(isReadonly && target[ReactiveFlags.IS_REACTIVE])
@@ -204,20 +214,31 @@ function createReactiveObject(
     return target
   }
   // target already has corresponding Proxy
+  // 如果对象已经收集了依赖，直接返回，防止反复收集依赖
   const existingProxy = proxyMap.get(target)
   if (existingProxy) {
     return existingProxy
   }
   // only a whitelist of value types can be observed.
+  // 只能观察到值类型的白名单。
+  // INVALID是除了Object Array Map Set WeakMap WeakSet之外的类型
+  // To: getTargetType:
+  // Return From getTargetType: 获取target的类型
   const targetType = getTargetType(target)
   if (targetType === TargetType.INVALID) {
     return target
   }
+  // 执行Proxy代理，对target对象进行代理
+  // 会根据TargetType.COLLECTION来进行判断使用哪个handlers进行代理
+  // baseHandlers是一般值类型  collectionHandlers是map set这些类型
+  // To: baseHandlers
   const proxy = new Proxy(
     target,
     targetType === TargetType.COLLECTION ? collectionHandlers : baseHandlers
   )
+  // 代理完之后，在proxyMap上收集代理对象，防止反复收集依赖
   proxyMap.set(target, proxy)
+  // 返回代理
   return proxy
 }
 

@@ -67,9 +67,11 @@ export const isPromise = <T = any>(val: unknown): val is Promise<T> => {
 export const objectToString = Object.prototype.toString
 export const toTypeString = (value: unknown): string =>
   objectToString.call(value)
-
+// From getTargetType:
+// Return To getTargetType: 从“[object RawType]”之类的字符串中提取“RawType”
 export const toRawType = (value: unknown): string => {
   // extract "RawType" from strings like "[object RawType]"
+  // 从“[object RawType]”之类的字符串中提取“RawType”
   return toTypeString(value).slice(8, -1)
 }
 
