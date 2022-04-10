@@ -140,7 +140,7 @@ function createGetter(isReadonly = false, shallow = false) {
     // 如果不是只读，才需要收集依赖，建立响应联系
     if (!isReadonly) {
       // From createGetter:
-      //todo To: track 
+      //todo To: track
       track(target, TrackOpTypes.GET, key)
     }
     // 如果是shallow浅响应式，返回经过一次依赖收集的res
@@ -149,7 +149,8 @@ function createGetter(isReadonly = false, shallow = false) {
     }
     // 如果是Ref，脱Ref
     // From createGetter:
-    //todo To: isRef 
+    // To: isRef
+    // Return From isRef: 判断r上是否有__v_isRef属性，判断是否是Ref
     if (isRef(res)) {
       // ref unwrapping - does not apply for Array + integer key.
       // ref unwrapping - 不适用于 Array + integer key。
@@ -169,7 +170,7 @@ function createGetter(isReadonly = false, shallow = false) {
       // 这里是为了避免无效值警告。 还需要惰性访问只读
       // 并在此处进行反应以避免循环依赖。
       // From createGetter:
-      //todo To: readonly 
+      //todo To: readonly
       return isReadonly ? readonly(res) : reactive(res)
     }
     // 最后返回res
@@ -179,44 +180,78 @@ function createGetter(isReadonly = false, shallow = false) {
 
 const set = /*#__PURE__*/ createSetter()
 const shallowSet = /*#__PURE__*/ createSetter(true)
-
+// From set:
 function createSetter(shallow = false) {
+  // 返回set方法
   return function set(
     target: object,
     key: string | symbol,
     value: unknown,
     receiver: object
   ): boolean {
+    // 获取旧值
     let oldValue = (target as any)[key]
+    // 如果是只读并且Ref并且新值不是Ref，返回false
+    // From createSetter:
+    // To isReadonly:
+    // Return From isReadonly: 判断是否是只读类型 根据据value上是否有ReactiveFlags.IS_READONLY属性判断
+    // To isRef: 
+    // Return From isRef: 判断是否是Ref类型 根据value上是否有__v_isRef属性判断
     if (isReadonly(oldValue) && isRef(oldValue) && !isRef(value)) {
       return false
     }
+    // 如果shallow是false(浅响应式)，并且新值不是只读
     if (!shallow && !isReadonly(value)) {
+      // 如果新值也不是浅响应式
+      // From createSetter:
+      // To isShallow:
+      // Return From isShallow: 判断是否是浅响应式 根据value上是否有ReactiveFlags.IS_SHALLOW属性判断
       if (!isShallow(value)) {
+        // From createSetter:
+        // To: toRaw
+        // Return From toRaw: 返回原始的代理对象
         value = toRaw(value)
         oldValue = toRaw(oldValue)
       }
+      // 如果target不是数组，并且老值是Ref并且新值不是Ref
       if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
+        // 直接把新值赋值给老值的value
         oldValue.value = value
         return true
       }
     } else {
       // in shallow mode, objects are set as-is regardless of reactive or not
+      // 在浅模式下，无论是否反应，对象都按原样设置
     }
 
     const hadKey =
+      // 如果target是数组，并且key是数字(索引)
+      // From createSetter:
+      // To isIntegerKey:
+      // Return From isIntegerKey: 判断是否是数字索引
       isArray(target) && isIntegerKey(key)
-        ? Number(key) < target.length
-        : hasOwn(target, key)
+        ? // 如果索引小于数组长度，代表没有新增，就是SET类型，如果不小于数组长度，代表新增了，就是ADD类型
+          Number(key) < target.length
+        : // 如果拥有对应的key，是SET类型，如果没有对应的key，代表要新增，就是ADD类型
+          hasOwn(target, key)
+    // 使用Reflect.set方法，receiver为了this
     const result = Reflect.set(target, key, value, receiver)
     // don't trigger if target is something up in the prototype chain of original
+    // target === toRaw(receiver)就说明receiver就是target的代理对象,此目的是为了屏蔽由原型引起的更新
     if (target === toRaw(receiver)) {
       if (!hadKey) {
+        // 如果没有hadkey为false，那么Trigger类型为ADD
+        //todo To: Trigger
         trigger(target, TriggerOpTypes.ADD, key, value)
       } else if (hasChanged(value, oldValue)) {
+        // From createSetter:
+        // To hasChanged:
+        // Return From hasChanged: 比较新值和旧值是否发生了变化，包含对 NaN的判断。
+        // 如果新旧值发生了变化，就Trigger 类型为SET
         trigger(target, TriggerOpTypes.SET, key, value, oldValue)
       }
     }
+    // 返回Reflect.set方法的返回值
     return result
   }
 }

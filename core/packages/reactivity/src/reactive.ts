@@ -249,20 +249,30 @@ export function isReactive(value: unknown): boolean {
   }
   return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
 }
-
+// From createSetter:
+// Return To createSetter: 根据value上是否有ReactiveFlags.IS_READONLY属性判断是否是只读
 export function isReadonly(value: unknown): boolean {
+  // 当在创建readonly时，会加上这个属性
+  // 所以这里是判断value上是否有ReactiveFlags.IS_READONLY这个属性，
   return !!(value && (value as Target)[ReactiveFlags.IS_READONLY])
 }
-
+// From createSetter:
+// Return To createSetter: 根据value上是否有ReactiveFlags.IS_SHALLOW属性判断是否是浅响应式
 export function isShallow(value: unknown): boolean {
+  // 当在创建shallow时，会加上这个属性
+  // 所以这里是判断value上是否有ReactiveFlags.IS_SHALLOW这个属性，
   return !!(value && (value as Target)[ReactiveFlags.IS_SHALLOW])
 }
 
 export function isProxy(value: unknown): boolean {
   return isReactive(value) || isReadonly(value)
 }
-
+// From createSetter:
+// Return To createSetter: 返回原始的代理对象
 export function toRaw<T>(observed: T): T {
+  // observed上是否有ReactiveFlags.RAW属性
+  // 如果有这属性，继续toRaw，直到没有这属性，返回observer
+  // 如果没有这属性，返回observed
   const raw = observed && (observed as Target)[ReactiveFlags.RAW]
   return raw ? toRaw(raw) : observed
 }

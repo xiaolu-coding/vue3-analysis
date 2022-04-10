@@ -88,7 +88,8 @@ export const toRawType = (value: unknown): string => {
 
 export const isPlainObject = (val: unknown): val is object =>
   toTypeString(val) === '[object Object]'
-
+// From createSetter createGetter:
+// Return To createSetter createGetter: 判断是否是字符串类型的正整数
 export const isIntegerKey = (key: unknown) =>
   isString(key) &&
   key !== 'NaN' &&
@@ -157,7 +158,11 @@ export const toHandlerKey = cacheStringFunction((str: string) =>
 )
 
 // compare whether a value has changed, accounting for NaN.
+// 比较一个值是否发生了变化，包含 NaN。
+// From createSetter:
+// Return To createSetter: 比较一个值是否发生了变化，包含对 NaN的判断。
 export const hasChanged = (value: any, oldValue: any): boolean =>
+  // 判断value和oldValue是否相等，如果是NaN，则认为是相等
   !Object.is(value, oldValue)
 
 export const invokeArrayFns = (fns: Function[], arg?: any) => {
