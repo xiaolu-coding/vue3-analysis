@@ -1214,7 +1214,7 @@ function baseCreateRenderer(
     // mounting
 
     // createComponentInstance创建组件实例
-    // To: createComponentInstance创建组件实例  
+    // To: createComponentInstance创建组件实例
     // Return From createComponentInstance: 得到返回的instance组件实例
     const compatMountInstance =
       __COMPAT__ && initialVNode.isCompatRoot && initialVNode.component
@@ -1236,7 +1236,6 @@ function baseCreateRenderer(
     }
 
     // inject renderer internals for keepAlive
-    //todo mountComponent内部的keepAlive先忽略，之后看
     if (isKeepAlive(initialVNode)) {
       ;(instance.ctx as KeepAliveContext).renderer = internals
     }
@@ -1324,6 +1323,7 @@ function baseCreateRenderer(
     }
   }
   // From: mountComponent
+  // Return To mountComponent: 创建更新函数，创建更新机制，首次更新视图
   const setupRenderEffect: SetupRenderEffectFn = (
     instance,
     initialVNode,
@@ -1612,7 +1612,7 @@ function baseCreateRenderer(
     // 首次更新视图
     // 执行一次componentUpdateFn，因为首次挂载，没有更新，所以直接进行render，patch渲染视图
     update()
-  }
+  }  
 
   const updateComponentPreRender = (
     instance: ComponentInternalInstance,
