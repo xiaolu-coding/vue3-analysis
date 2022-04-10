@@ -198,22 +198,33 @@ export function resetTracking() {
   const last = trackStack.pop()
   shouldTrack = last === undefined ? true : last
 }
-
+// From createGetter:
 export function track(target: object, type: TrackOpTypes, key: unknown) {
+  // 判断shouldTrack和activeEffect
   if (shouldTrack && activeEffect) {
+    // 这一整步是为了创建依赖集合，像这样的结构 targetMap: {target -> key -> dep}
+    // targetMap是WeakMap类型，depsMap是Map类型，dep是Set类型
+    // targetMap的key值是target，value值是depsMap
+    // depsMap的key值是key，value值是dep
+    // 因此形成了相对应的依赖集合，这个会细说
     let depsMap = targetMap.get(target)
+    // 不存在时，初始化依赖集合
     if (!depsMap) {
       targetMap.set(target, (depsMap = new Map()))
     }
     let dep = depsMap.get(key)
+    // 不存在时，初始化依赖集合
     if (!dep) {
+      // From track:
+      // To createDep:
+      // Return From createDep: 创建一个set集合，并且set集合有两个关于响应式性能优化的属性w和n
       depsMap.set(key, (dep = createDep()))
     }
-
+    // DEV忽略
     const eventInfo = __DEV__
       ? { effect: activeEffect, target, type, key }
       : undefined
-
+    // 执行trackEffects，进行依赖的添加
     trackEffects(dep, eventInfo)
   }
 }
