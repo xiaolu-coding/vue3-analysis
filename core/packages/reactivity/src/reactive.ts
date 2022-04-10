@@ -231,6 +231,7 @@ function createReactiveObject(
   // 执行Proxy代理，对target对象进行代理
   // 会根据TargetType.COLLECTION来进行判断使用哪个handlers进行代理
   // baseHandlers是一般值类型  collectionHandlers是map set这些类型
+  // From: createReactiveObject
   // To: baseHandlers
   const proxy = new Proxy(
     target,

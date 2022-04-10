@@ -205,7 +205,8 @@ function ownKeys(target: object): (string | symbol)[] {
   track(target, TrackOpTypes.ITERATE, isArray(target) ? 'length' : ITERATE_KEY)
   return Reflect.ownKeys(target)
 }
-
+// From createReactiveObject:
+// Return To createReactiveObject: 返回如下方法
 export const mutableHandlers: ProxyHandler<object> = {
   get,
   set,
@@ -213,7 +214,8 @@ export const mutableHandlers: ProxyHandler<object> = {
   has,
   ownKeys
 }
-
+// From createReactiveObject:
+// Return To createReactiveObject: 返回如下方法
 export const readonlyHandlers: ProxyHandler<object> = {
   get: readonlyGet,
   set(target, key) {
@@ -235,7 +237,10 @@ export const readonlyHandlers: ProxyHandler<object> = {
     return true
   }
 }
-
+// From createReactiveObject:
+// To extend: 
+// Return From extend: extend就是Object.assign方法
+// Return To createReactiveObject: 返回如下方法
 export const shallowReactiveHandlers = /*#__PURE__*/ extend(
   {},
   mutableHandlers,
@@ -248,6 +253,8 @@ export const shallowReactiveHandlers = /*#__PURE__*/ extend(
 // Props handlers are special in the sense that it should not unwrap top-level
 // refs (in order to allow refs to be explicitly passed down), but should
 // retain the reactivity of the normal readonly object.
+// From createReactiveObject:
+// Return To createReactiveObject: 返回如下方法
 export const shallowReadonlyHandlers = /*#__PURE__*/ extend(
   {},
   readonlyHandlers,

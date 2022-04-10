@@ -30,7 +30,8 @@ const onRE = /^on[^a-z]/
 export const isOn = (key: string) => onRE.test(key)
 
 export const isModelListener = (key: string) => key.startsWith('onUpdate:')
-
+// From shallowReactiveHandlers:
+// Return To shallowReactiveHandlers: 就是调用Object.assign方法，合并对象
 export const extend = Object.assign
 
 export const remove = <T>(arr: T[], el: T) => {
