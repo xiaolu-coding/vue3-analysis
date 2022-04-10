@@ -202,10 +202,11 @@ export function resetTracking() {
 export function track(target: object, type: TrackOpTypes, key: unknown) {
   // 判断shouldTrack和activeEffect
   if (shouldTrack && activeEffect) {
-    // 这一整步是为了创建依赖集合，像这样的结构 targetMap: {target -> key -> dep}
+    // 这一整步是为了创建依赖集合，像这样的结构 targetMap: {target -> key -> dep -> effect}
     // targetMap是WeakMap类型，depsMap是Map类型，dep是Set类型
     // targetMap的key值是target，value值是depsMap
     // depsMap的key值是key，value值是dep
+    // dep的key值是effect，也就是ReactiveEffect
     // 因此形成了相对应的依赖集合，这个会细说
     let depsMap = targetMap.get(target)
     // 不存在时，初始化依赖集合
