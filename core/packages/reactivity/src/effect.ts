@@ -386,24 +386,34 @@ export function trigger(
       triggerEffects(createDep(effects), eventInfo)
     } else {
       // 涉及到set规范 执行triggerEffects
+      // From trigger:
+      // To triggerEffects:
+      // Reutrn From triggerEffects: 循环所用的副作用函数，根据有无调度器，使用不同方式执行副作用函数
       triggerEffects(createDep(effects))
     }
   }
 }
-
+// From trigger:
+// Return To createSetter: 循环所用的副作用函数，根据有无调度器，使用不同方式执行副作用函数
 export function triggerEffects(
   dep: Dep | ReactiveEffect[],
   debuggerEventExtraInfo?: DebuggerEventExtraInfo
 ) {
   // spread into array for stabilization
+  // 找到相关依赖，循环所有的副作用函数
   for (const effect of isArray(dep) ? dep : [...dep]) {
+    // 如果trigger触发执行的副作用函数与现在正在执行的副作用函数相同，则不触发执行
     if (effect !== activeEffect || effect.allowRecurse) {
+      // DEV忽略
       if (__DEV__ && effect.onTrigger) {
         effect.onTrigger(extend({ effect }, debuggerEventExtraInfo))
       }
+      // 如果一个副作用函数存在调度器
       if (effect.scheduler) {
+        // 则调用该调度器，并将副作用函数作为参数传递
         effect.scheduler()
       } else {
+        // 否则直接执行副作用函数
         effect.run()
       }
     }
