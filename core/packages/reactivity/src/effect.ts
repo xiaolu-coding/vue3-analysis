@@ -271,7 +271,7 @@ export function trackEffects(
     }
   }
 }
-
+// From createSetter:
 export function trigger(
   target: object,
   type: TriggerOpTypes,
@@ -280,19 +280,29 @@ export function trigger(
   oldValue?: unknown,
   oldTarget?: Map<unknown, unknown> | Set<unknown>
 ) {
+  // 获取depsMap
   const depsMap = targetMap.get(target)
+  // 如果depsMap不存在
   if (!depsMap) {
     // never been tracked
+    // 从未被追踪，返回
     return
   }
-
+  // 创建deps数组
   let deps: (Dep | undefined)[] = []
+  // 如果type为CLEAR
   if (type === TriggerOpTypes.CLEAR) {
     // collection being cleared
     // trigger all effects for target
+    // 集合被清空
+    // 触发所有的依赖
+    // 展开target里的所有值，并values执行get，触发所有依赖
     deps = [...depsMap.values()]
+    // 如果target是数组并且修改了数组的length属性
   } else if (key === 'length' && isArray(target)) {
+    // 遍历副作用函数，找出需要的副作用函数
     depsMap.forEach((dep, key) => {
+      // 只有索引值大于等于length时，才需要添加到deps数组中 例如 一个数组有5个元素，你通过arr.length = 3改变数组，此时数组需要更新，但是arr.length = 7，不需要更新 
       if (key === 'length' || key >= (newValue as number)) {
         deps.push(dep)
       }
@@ -305,55 +315,77 @@ export function trigger(
 
     // also run for iteration key on ADD | DELETE | Map.SET
     switch (type) {
+      // 当类型为ADD时，新增
       case TriggerOpTypes.ADD:
+        // 如果target不是数组
         if (!isArray(target)) {
+          //todo: ADD操作会使对象的键变多，会影响到for in循环的此处，因此取出与ITERATE_KEY关联的副作用函数，推入到deps数组中 (这里的ITERATE_KEY涉及ownKeys for in循环)
           deps.push(depsMap.get(ITERATE_KEY))
+          // 如果target是map类型
           if (isMap(target)) {
+            // ADD操作会使map的size属性变化，因此取出与MAP_KEY_ITERATE_KEY关联的副作用函数，推入到deps数组中
             deps.push(depsMap.get(MAP_KEY_ITERATE_KEY))
           }
         } else if (isIntegerKey(key)) {
+          // target是数组，并且key是正整数
+          // ADD操作会使数组的length属性变化，因此取出与length属性相关的副作用函数，推入到deps数组中
           // new index added to array -> length changes
           deps.push(depsMap.get('length'))
         }
         break
+      // 当类型为DELETE时
       case TriggerOpTypes.DELETE:
+        // 如果target不是数组
         if (!isArray(target)) {
+          // DELETE操作会使对象的键变少，会影响到for in循环的次数， 因此又要取出取出与ITERATE_KEY关联的副作用函数，推入到deps数组中
           deps.push(depsMap.get(ITERATE_KEY))
+          // 如果target是map类型
           if (isMap(target)) {
+            // DELETE操作会使map的size属性变化，因此取出与MAP_KEY_ITERATE_KEY关联的副作用函数，推入到deps数组中
             deps.push(depsMap.get(MAP_KEY_ITERATE_KEY))
           }
         }
         break
+      // 当类型为SET时 
       case TriggerOpTypes.SET:
+        // 如果target是map类型
         if (isMap(target)) {
+          // SET操作会使map的变化，因此取出与ITERATE_KEY关联的副作用函数，推入到deps数组中
           deps.push(depsMap.get(ITERATE_KEY))
         }
         break
     }
   }
-
+  // DEV忽略
   const eventInfo = __DEV__
     ? { target, type, key, newValue, oldValue, oldTarget }
     : undefined
-
+  // 判断deps数组是否只有一个，也就是只有一个副作用函数
   if (deps.length === 1) {
     if (deps[0]) {
+      // DEV忽略
       if (__DEV__) {
         triggerEffects(deps[0], eventInfo)
       } else {
+        // 执行triggerEffects
         triggerEffects(deps[0])
       }
     }
   } else {
+    // 如果不止一个副作用函数
     const effects: ReactiveEffect[] = []
+    // 遍历deps数组
     for (const dep of deps) {
       if (dep) {
+        // 将dep推入到effects中
         effects.push(...dep)
       }
     }
+    // DEV忽略
     if (__DEV__) {
       triggerEffects(createDep(effects), eventInfo)
     } else {
+      // 涉及到set规范 执行triggerEffects
       triggerEffects(createDep(effects))
     }
   }
