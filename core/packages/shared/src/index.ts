@@ -60,6 +60,8 @@ export const isSet = (val: unknown): val is Set<any> =>
   toTypeString(val) === '[object Set]'
 
 export const isDate = (val: unknown): val is Date => val instanceof Date
+// From computed:
+// Return To computed: 判断是否是function类型
 export const isFunction = (val: unknown): val is Function =>
   typeof val === 'function'
 export const isString = (val: unknown): val is string => typeof val === 'string'

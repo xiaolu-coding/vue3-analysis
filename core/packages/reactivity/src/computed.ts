@@ -67,7 +67,7 @@ export class ComputedRefImpl<T> {
     this._setter(newValue)
   }
 }
-
+// computed
 export function computed<T>(
   getter: ComputedGetter<T>,
   debugOptions?: DebuggerOptions
@@ -81,28 +81,38 @@ export function computed<T>(
   debugOptions?: DebuggerOptions,
   isSSR = false
 ) {
+  // getter
   let getter: ComputedGetter<T>
+  // setter
   let setter: ComputedSetter<T>
-
+  // From computed:
+  // To isFunction:
+  // Return From isFunction: 判断是否是function类型
+  // 判断getterOrOptions是否是函数，如果是函数就是get，如果不是就是get和set
   const onlyGetter = isFunction(getterOrOptions)
   if (onlyGetter) {
+    // 如果是函数,就将get函数赋值给getter
     getter = getterOrOptions
+    // setter不用
     setter = __DEV__
       ? () => {
           console.warn('Write operation failed: computed value is readonly')
         }
       : NOOP
   } else {
+    // 如果不是函数
+    // 将对象的get赋给getter
     getter = getterOrOptions.get
+    // 将对象的set赋给setter
     setter = getterOrOptions.set
   }
-
+  // 创建一个新的computedRefImpl对象
   const cRef = new ComputedRefImpl(getter, setter, onlyGetter || !setter, isSSR)
-
+  // DEV忽略
   if (__DEV__ && debugOptions && !isSSR) {
     cRef.effect.onTrack = debugOptions.onTrack
     cRef.effect.onTrigger = debugOptions.onTrigger
   }
-
+  // 返回cRef对象
   return cRef as any
 }
