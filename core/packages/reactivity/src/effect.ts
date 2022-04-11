@@ -180,11 +180,13 @@ export function effect<T = any>(
 export function stop(runner: ReactiveEffectRunner) {
   runner.effect.stop()
 }
-
+// 是否收集依赖
 export let shouldTrack = true
 const trackStack: boolean[] = []
-
+// From createArrayInstrumentations:
+// Retrun to createArrayInstrumentations: 停止依赖收集
 export function pauseTracking() {
+  // 将shouldTrack入栈trackStack
   trackStack.push(shouldTrack)
   shouldTrack = false
 }
@@ -193,9 +195,12 @@ export function enableTracking() {
   trackStack.push(shouldTrack)
   shouldTrack = true
 }
-
+// From createArrayInstrumentations:
+// Retrun to createArrayInstrumentations: 重启依赖收集
 export function resetTracking() {
+  // 将shouldTrack出栈trackStack
   const last = trackStack.pop()
+  // shouldTrack为true
   shouldTrack = last === undefined ? true : last
 }
 // From createGetter:

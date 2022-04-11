@@ -48,37 +48,59 @@ const readonlyGet = /*#__PURE__*/ createGetter(true)
 const shallowReadonlyGet = /*#__PURE__*/ createGetter(true, true)
 
 const arrayInstrumentations = /*#__PURE__*/ createArrayInstrumentations()
-
+// From createGetter:
+// Return To createGetter: // 返回一个包含了重写的几个数组方法'push', 'pop', 'shift', 'unshift', 'splice'，'includes', 'indexOf', 'lastIndexOf'的对象
 function createArrayInstrumentations() {
   const instrumentations: Record<string, Function> = {}
   // instrument identity-sensitive Array methods to account for possible reactive
   // values
+  // includes indexOf lastIndexOf它们都根据给定的值返回查找结果
   ;(['includes', 'indexOf', 'lastIndexOf'] as const).forEach(key => {
+    // this是代理数组
     instrumentations[key] = function (this: unknown[], ...args: unknown[]) {
+      // 获取原始数组
       const arr = toRaw(this) as any
+      // 循环代理数组
       for (let i = 0, l = this.length; i < l; i++) {
+        // 对原始数组的每个值进行track依赖收集
         track(arr, TrackOpTypes.GET, i + '')
       }
       // we run the method using the original args first (which may be reactive)
+      // 执行includes indexOf lastIndexOf方法，将返回值赋值给res
       const res = arr[key](...args)
+      // 如果返回值是-1或false，代表没找到
       if (res === -1 || res === false) {
         // if that didn't work, run it again using raw values.
+        // 如果不起作用，请使用原始值再次运行。
         return arr[key](...args.map(toRaw))
       } else {
+        // 如果找到了，返回方法的返回结果res
         return res
       }
     }
   })
   // instrument length-altering mutation methods to avoid length being tracked
   // which leads to infinite loops in some cases (#2137)
+  // 会隐式修改数组长度的方法 当调用push时，会读取数组的length属性值，也会设置数组的length属性值，会导致两个独立的副作用函数互相影响，会导致栈溢出
+  // 所以只要屏蔽这些方法对length属性值的读取，就可以了
   ;(['push', 'pop', 'shift', 'unshift', 'splice'] as const).forEach(key => {
+    // this是代理数组
     instrumentations[key] = function (this: unknown[], ...args: unknown[]) {
+      // From: createArrayInstrumentations
+      // To pauseTracking:
+      // Return From pauseTracking: 停止依赖收集
       pauseTracking()
+      // toRaw获取原始数组，并执行相应方法 push pop shift unshift splice，将结果赋值给res
       const res = (toRaw(this) as any)[key].apply(this, args)
+      // From: createArrayInstrumentations
+      // To resetTracking:
+      // Return From resetTracking: 重启依赖收集
       resetTracking()
+      // 将执行结果res返回
       return res
     }
   })
+  // 返回instrumentations对象，包含了重写的几个数组方法'push', 'pop', 'shift', 'unshift', 'splice'，'includes', 'indexOf', 'lastIndexOf'
   return instrumentations
 }
 // From get:
@@ -124,6 +146,7 @@ function createGetter(isReadonly = false, shallow = false) {
       // 返回数组方法
       // From: createGetter:
       //todo To: arrayInstrumentations
+      // 例如: 当执行arr.includes其实执行的是arrayInstrumentations.includes 这样就实现了重写数组方法
       return Reflect.get(arrayInstrumentations, key, receiver)
     }
     // 使用Reflect是为了第三个参数的this
