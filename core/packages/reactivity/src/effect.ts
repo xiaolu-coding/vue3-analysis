@@ -19,14 +19,18 @@ type KeyToDepMap = Map<any, Dep>
 const targetMap = new WeakMap<any, KeyToDepMap>()
 
 // The number of effects currently being tracked recursively.
+// 当前正在递归跟踪的效果数。
 let effectTrackDepth = 0
-
+// 递归嵌套层数
 export let trackOpBit = 1
 
 /**
  * The bitwise track markers support at most 30 levels of recursion.
  * This value is chosen to enable modern JS engines to use a SMI on all platforms.
  * When recursion depth is greater, fall back to using a full cleanup.
+ * 按位跟踪标记最多支持 30 级递归。
+ * 选择此值是为了使现代 JS 引擎能够在所有平台上使用 SMI。
+ * 当递归深度更大时，回退到使用完全清理。
  */
 const maxMarkerBits = 30
 
@@ -101,10 +105,16 @@ export class ReactiveEffect<T = any> {
       activeEffect = this
       // 将shouldTrack置为true
       shouldTrack = true
-      //todo 涉及响应式性能优化
+      // 使用左移运算符来表示递归的层数
+      // effectTrackDepth初始为0 ++之后为1  1 << 1 = 2
+      // 位运算如下: 0000001 左移一位   0000010 此时代表调用了一次effect
+      // 使用位运算可以处理嵌套的effect
       trackOpBit = 1 << ++effectTrackDepth
-      // 响应式性能优化的地方，先看else
+      // 如果effectTrackDepth <= 30 调用initDepMarkers，否则降级到cleanupEffect
       if (effectTrackDepth <= maxMarkerBits) {
+        // From effect.run:
+        // To initDepMarkers:
+        // Return From initDepMarkers: 初始化deps的w属性，代表已经收集依赖
         initDepMarkers(this)
       } else {
         // 执行cleanupEffect
@@ -116,11 +126,14 @@ export class ReactiveEffect<T = any> {
       // 返回fn fn是effect函数传入的参数，通常是更新函数也就是副作用函数
       return this.fn()
     } finally {
-      // 响应式性能优化
+      // 如果effectTrackDepth <= 30 调用finalizeDepMarkers
       if (effectTrackDepth <= maxMarkerBits) {
+        // From effect.run:
+        // To: finalizeDepMarkers
+        // Return from finalizeDepMarkers: 遍历deps，删除曾经被收集过但不是新的依赖，将新的依赖添加到deps中，最后得到的就是删除不必要的旧依赖后的deps
         finalizeDepMarkers(this)
       }
-
+      // 递归层数恢复到上一级
       trackOpBit = 1 << --effectTrackDepth
       // 涉及effectScope
       activeEffect = this.parent
@@ -264,10 +277,19 @@ export function trackEffects(
 ) {
   // 将shouldTrack置为false
   let shouldTrack = false
-  //todo: 涉及响应式性能优化，后面一起来看，先不管，看else
+  // 如果effectTrackDepth <= 30 没有超过最大递归层数
   if (effectTrackDepth <= maxMarkerBits) {
+    // From trackEffects:
+    // To newTracked:
+    // Retrun From newTracked: 判断是否是新的依赖
+    // 如果不是新的依赖
     if (!newTracked(dep)) {
+      // 设置为新的依赖
       dep.n |= trackOpBit // set newly tracked
+      // From trackEffects:
+      // To wasTracked:
+      // Reutrn from wasTracked: 判断是否是已经收集的依赖
+      // 如果已经收集了，shouldTrack为false，如果没有收集shuoldTrack为true
       shouldTrack = !wasTracked(dep)
     }
   } else {
