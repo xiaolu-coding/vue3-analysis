@@ -27,10 +27,14 @@ type RefBase<T> = {
   dep?: Dep
   value: T
 }
-
+// From RefImpl:
+// Return To RefImpl: 调用trackEffects收集依赖
 export function trackRefValue(ref: RefBase<any>) {
+  // 判断shouldTrack和activeEffect
   if (shouldTrack && activeEffect) {
+    // 如果shouldTrack为true，并且activeEffect不为null，使用toRaw获取原始ref
     ref = toRaw(ref)
+    // DEV忽略
     if (__DEV__) {
       trackEffects(ref.dep || (ref.dep = createDep()), {
         target: ref,
@@ -38,6 +42,7 @@ export function trackRefValue(ref: RefBase<any>) {
         key: 'value'
       })
     } else {
+      // 调用trackEffects方法收集依赖
       trackEffects(ref.dep || (ref.dep = createDep()))
     }
   }
@@ -121,7 +126,10 @@ class RefImpl<T> {
   }
   // 对value的getter
   get value() {
-    // 执行trackRefValue
+    // From RefImpl:
+    // To trackRefValue:
+    // Return From trackRefValue: 调用trackEffects收集依赖
+    // 执行trackRefValue收集依赖
     trackRefValue(this)
     // 返回_value
     return this._value
