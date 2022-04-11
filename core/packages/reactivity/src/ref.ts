@@ -72,6 +72,8 @@ export function ref<T extends object>(
 export function ref<T>(value: T): Ref<UnwrapRef<T>>
 export function ref<T = any>(): Ref<T | undefined>
 export function ref(value?: unknown) {
+  // From ref:
+  // To createRef:
   return createRef(value, false)
 }
 
@@ -87,11 +89,14 @@ export function shallowRef<T = any>(): ShallowRef<T | undefined>
 export function shallowRef(value?: unknown) {
   return createRef(value, true)
 }
-
+// From ref:
 function createRef(rawValue: unknown, shallow: boolean) {
+  // 判断是否是ref
   if (isRef(rawValue)) {
+    // 如果是ref，直接返回
     return rawValue
   }
+  // 返回一个RefImpl对象
   return new RefImpl(rawValue, shallow)
 }
 
