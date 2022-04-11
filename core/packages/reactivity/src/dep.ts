@@ -17,8 +17,10 @@ type TrackedMarkers = {
    */
   n: number
 }
-
+// From track:
+// Return To track: 创建一个set集合，并且set集合有两个关于响应式性能优化的属性w和n
 export const createDep = (effects?: ReactiveEffect[]): Dep => {
+  //todo: 创建一个新的set集合dep，并添加两个属性w,n (涉及到响应式性能优化，会细说)
   const dep = new Set<ReactiveEffect>(effects) as Dep
   dep.w = 0
   dep.n = 0
