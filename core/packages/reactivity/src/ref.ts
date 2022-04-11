@@ -47,10 +47,14 @@ export function trackRefValue(ref: RefBase<any>) {
     }
   }
 }
-
+// From RefImpl:
+// Return To RefImpl: 调用triggerEffects触发依赖，执行副作用函数
 export function triggerRefValue(ref: RefBase<any>, newVal?: any) {
+  // toRaw获取原始ref
   ref = toRaw(ref)
+  // 如果ref.dep存在
   if (ref.dep) {
+    // DEV忽略
     if (__DEV__) {
       triggerEffects(ref.dep, {
         target: ref,
@@ -59,6 +63,7 @@ export function triggerRefValue(ref: RefBase<any>, newVal?: any) {
         newValue: newVal
       })
     } else {
+      // 调用triggerEffects触发依赖，执行副作用函数
       triggerEffects(ref.dep)
     }
   }
@@ -144,7 +149,10 @@ class RefImpl<T> {
       this._rawValue = newVal
       // 如果不是shaollw 如果value是对象，_value是toReactive(newVal)，如果不是对象，_value是newVal
       this._value = this.__v_isShallow ? newVal : toReactive(newVal)
-      // 执行triggerRefValue
+      // From RefImpl:
+      // To: triggerRefValue
+      // Return From triggerRefValue: 调用triggerEffects触发依赖，执行副作用函数
+      // 调用triggerRefValue方法触发依赖，执行副作用函数
       triggerRefValue(this, newVal)
     }
   }
