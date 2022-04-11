@@ -78,11 +78,14 @@ export class ReactiveEffect<T = any> {
   ) {
     recordEffectScope(this, scope)
   }
-
+  // From triggerEffects:
   run() {
+    // 如果当前不是活跃的
     if (!this.active) {
+      // 返回fn fn是effect函数传入的参数，通常是更新函数也就是副作用函数
       return this.fn()
     }
+    //todo parent的操作涉及effectScope
     let parent: ReactiveEffect | undefined = activeEffect
     let lastShouldTrack = shouldTrack
     while (parent) {
@@ -92,25 +95,31 @@ export class ReactiveEffect<T = any> {
       parent = parent.parent
     }
     try {
+      // 取得effect
       this.parent = activeEffect
+      // 将this赋给activeEffect
       activeEffect = this
+      // 将shouldTrack置为true
       shouldTrack = true
-
+      //todo 涉及响应式性能优化
       trackOpBit = 1 << ++effectTrackDepth
-
+      // 响应式性能优化的地方，先看else
       if (effectTrackDepth <= maxMarkerBits) {
         initDepMarkers(this)
       } else {
+        // 执行cleanupEffect
         cleanupEffect(this)
       }
+      // 返回fn fn是effect函数传入的参数，通常是更新函数也就是副作用函数
       return this.fn()
     } finally {
+      // 响应式性能优化
       if (effectTrackDepth <= maxMarkerBits) {
         finalizeDepMarkers(this)
       }
 
       trackOpBit = 1 << --effectTrackDepth
-
+      // 涉及effectScope
       activeEffect = this.parent
       shouldTrack = lastShouldTrack
       this.parent = undefined
