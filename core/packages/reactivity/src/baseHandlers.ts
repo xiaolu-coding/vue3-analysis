@@ -348,9 +348,15 @@ function has(target: object, key: string | symbol): boolean {
   // 返回has操作的结果
   return result
 }
-
+// From mutableHandlers:
+// Return To mutableHandlers: 以ITERATE类型执行track收集依赖，如果操作目标是数组，则使用length属性作为key建立关联，如果不是数组是对象，则使用ITERATE_KEY建立关联
 function ownKeys(target: object): (string | symbol)[] {
+  // 以ITERATE类型执行track收集依赖
+  // 如果操作目标是数组，则使用length属性作为key建立关联，如果不是数组，则使用ITERATE_KEY建立关联
+  // 对象时，删除和增加属性值都会影响for in循环，所以用ITERATE_KEY为key做关联
+  // 但是数组不一样，数组添加新元素或者修改长度都会影响for in循环，而添加新元素和修改长度都是修改length属性，因此要用length属性为key建立关联
   track(target, TrackOpTypes.ITERATE, isArray(target) ? 'length' : ITERATE_KEY)
+  // 返回ownkeys的操作结果
   return Reflect.ownKeys(target)
 }
 // From createReactiveObject:
@@ -368,6 +374,8 @@ export const mutableHandlers: ProxyHandler<object> = {
   // To: has
   // Return From has: 如果不是Symbol值，就以HAS类型执行track收集依赖，并返回has操作的结果(has操作来自 in操作符)
   has,
+  // To: ownKeys:
+  // Retrun From ownKeys: 以ITERATE类型执行track收集依赖，如果操作目标是数组，则使用length属性作为key建立关联，如果不是数组是对象，则使用ITERATE_KEY建立关联
   ownKeys
 }
 // From createReactiveObject:
