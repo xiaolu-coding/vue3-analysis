@@ -108,6 +108,9 @@ export class ReactiveEffect<T = any> {
         initDepMarkers(this)
       } else {
         // 执行cleanupEffect
+        // From: run
+        // To: cleanupEffect
+        // Return From cleanupEffect: 清空依赖
         cleanupEffect(this)
       }
       // 返回fn fn是effect函数传入的参数，通常是更新函数也就是副作用函数
@@ -136,13 +139,19 @@ export class ReactiveEffect<T = any> {
     }
   }
 }
-
+// From effect.run:
+// Return To run: 清空对应依赖
 function cleanupEffect(effect: ReactiveEffect) {
+  // 解构出deps数组，trackEffects中activeEffect!.deps.push(dep)这一步就是为了这里
   const { deps } = effect
+  // 如果deps不为空
   if (deps.length) {
+    // 遍历deps
     for (let i = 0; i < deps.length; i++) {
+      // 将每一个dep中的effect依赖(副作用函数)移除
       deps[i].delete(effect)
     }
+    // 长度置为0
     deps.length = 0
   }
 }
