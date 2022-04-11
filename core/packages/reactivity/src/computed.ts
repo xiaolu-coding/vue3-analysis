@@ -22,7 +22,7 @@ export interface WritableComputedOptions<T> {
   get: ComputedGetter<T>
   set: ComputedSetter<T>
 }
-
+// From computed:
 export class ComputedRefImpl<T> {
   public dep?: Dep = undefined
 
@@ -41,28 +41,42 @@ export class ComputedRefImpl<T> {
     isReadonly: boolean,
     isSSR: boolean
   ) {
+    // 通过new ReactiveEffect创建effect副作用函数，第二个参数是scheduler
     this.effect = new ReactiveEffect(getter, () => {
+      // 当值发生变化时，判断dirty，使用调度器将dirty重置为true
       if (!this._dirty) {
+        // 如果dirty为false，则设置dirty为true
         this._dirty = true
+        // 手动调用triggerRefValue 避免嵌套的effect
         triggerRefValue(this)
       }
     })
+    // 给effect设置computed
     this.effect.computed = this
+    // 给effect设置active 如果是ssr则为false，如果不是就是true
     this.effect.active = this._cacheable = !isSSR
     this[ReactiveFlags.IS_READONLY] = isReadonly
   }
-
+  // value的getter
   get value() {
     // the computed ref may get wrapped by other proxies e.g. readonly() #3376
+    // 计算的 ref 可能会被其他代理包裹，例如 只读（）
+    // 通过toRaw获取原始的值
     const self = toRaw(this)
+    // 手动调用trackRefValue，去收集依赖 避免嵌套的effect
     trackRefValue(self)
+    // 判断dirty和_cacheable 只有脏了才计算值，
     if (self._dirty || !self._cacheable) {
+      // 如果dirty为true或者_cacheable为false 代表脏了
+      // 则设置dirty为false
       self._dirty = false
+      // 执行self.effect.run()
       self._value = self.effect.run()!
     }
+    // 返回value
     return self._value
   }
-
+  // value的setter
   set value(newValue: T) {
     this._setter(newValue)
   }
@@ -107,6 +121,8 @@ export function computed<T>(
     setter = getterOrOptions.set
   }
   // 创建一个新的computedRefImpl对象
+  // From computed:
+  // To ComputedRefImpl:
   const cRef = new ComputedRefImpl(getter, setter, onlyGetter || !setter, isSSR)
   // DEV忽略
   if (__DEV__ && debugOptions && !isSSR) {
