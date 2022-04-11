@@ -96,10 +96,12 @@ function createRef(rawValue: unknown, shallow: boolean) {
     // 如果是ref，直接返回
     return rawValue
   }
+  // From createRef:
+  // To RefImpl:
   // 返回一个RefImpl对象
   return new RefImpl(rawValue, shallow)
 }
-
+// From createRef:
 class RefImpl<T> {
   private _value: T
   private _rawValue: T
@@ -108,20 +110,33 @@ class RefImpl<T> {
   public readonly __v_isRef = true
 
   constructor(value: T, public readonly __v_isShallow: boolean) {
+    // 根据是否是shallow赋值
+    // 如果不是shallow rawValue就是原始的value
     this._rawValue = __v_isShallow ? value : toRaw(value)
+    // From RefImpl:
+    // To: toReactive
+    // Retrun From toReactive: 如果是对象，返回reactive(value)，如果不是对象，返回value
+    // 如果不是shaollw 如果value是对象，_value是toReactive(value)，如果不是对象，_value是value
     this._value = __v_isShallow ? value : toReactive(value)
   }
-
+  // 对value的getter
   get value() {
+    // 执行trackRefValue
     trackRefValue(this)
+    // 返回_value
     return this._value
   }
-
+  // 对value的setter
   set value(newVal) {
+    // 如果不是shallow newVal就是newVal的原始值
     newVal = this.__v_isShallow ? newVal : toRaw(newVal)
+    // 如果新、旧值发生改变
     if (hasChanged(newVal, this._rawValue)) {
+      // 赋值
       this._rawValue = newVal
+      // 如果不是shaollw 如果value是对象，_value是toReactive(newVal)，如果不是对象，_value是newVal
       this._value = this.__v_isShallow ? newVal : toReactive(newVal)
+      // 执行triggerRefValue
       triggerRefValue(this, newVal)
     }
   }
