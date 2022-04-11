@@ -315,14 +315,21 @@ function createSetter(shallow = false) {
     return result
   }
 }
-
+// From mutableHandlers:
+// Return To mutableHandlers: 如果target有相应的key值，并且删除成功，就以DELETE类型执行trigger触发依赖，key为关联，并将删除的老值传过去，并返回deleteProperty的操作结果
 function deleteProperty(target: object, key: string | symbol): boolean {
+  // hasOwn target上是否有相应的key，有则ture，无则false
   const hadKey = hasOwn(target, key)
+  // 获取key值赋值给oldValue
   const oldValue = (target as any)[key]
+  // 执行Reflect.deleteProperty操作删除key属性，并将返回值返回给result
   const result = Reflect.deleteProperty(target, key)
+  // 如果hadKey为true result为true，代表有相应的key并成功删除
   if (result && hadKey) {
+    // 以DELETE类型执行trigger触发依赖，key为关联，并将删除的老值传过去
     trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
   }
+  // 返回deleteProperty的操作结果
   return result
 }
 // From mutableHandlers:
@@ -355,6 +362,8 @@ export const mutableHandlers: ProxyHandler<object> = {
   // To: createSetter
   // Return From createSetter: 返回set方法，内部会执行trigger方法触发依赖，执行相关联的副作用函数
   set,
+  // To: deleteProperty:
+  // Reutrn From deleteProperty: 如果target有相应的key值，并且删除成功，就以DELETE类型执行trigger触发依赖，key为关联，并将删除的老值传过去，并返回deleteProperty的操作结果
   deleteProperty,
   // To: has
   // Return From has: 如果不是Symbol值，就以HAS类型执行track收集依赖，并返回has操作的结果(has操作来自 in操作符)
