@@ -76,6 +76,7 @@ export function isRef(r: any): r is Ref {
   return !!(r && r.__v_isRef === true)
 }
 // ref
+// 创建一个RefImpl对象，此对象对value设置了getter和setter，当get的时候依赖收集，set的时候触发依赖
 export function ref<T extends object>(
   value: T
 ): [T] extends [Ref] ? T : Ref<UnwrapRef<T>>
@@ -84,6 +85,7 @@ export function ref<T = any>(): Ref<T | undefined>
 export function ref(value?: unknown) {
   // From ref:
   // To createRef:
+  // Return From createRef: 返回RefImpl对象，此对象对value设置了getter和setter
   return createRef(value, false)
 }
 
@@ -100,6 +102,7 @@ export function shallowRef(value?: unknown) {
   return createRef(value, true)
 }
 // From ref:
+// Return To ref: 返回RefImpl对象，此对象对value设置了getter和setter
 function createRef(rawValue: unknown, shallow: boolean) {
   // 判断是否是ref
   if (isRef(rawValue)) {
@@ -108,10 +111,12 @@ function createRef(rawValue: unknown, shallow: boolean) {
   }
   // From createRef:
   // To RefImpl:
+  // Return From RefImpl: 返回RefImpl对象，此对象对value设置了getter和setter
   // 返回一个RefImpl对象
   return new RefImpl(rawValue, shallow)
 }
 // From createRef:
+// Return To createRef: 返回RefImpl对象，此对象对value设置了getter和setter
 class RefImpl<T> {
   private _value: T
   private _rawValue: T
