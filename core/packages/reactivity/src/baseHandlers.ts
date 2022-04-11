@@ -35,10 +35,42 @@ import { isRef } from './ref'
 // Return From makeMap: 用于检查map中是否有对应key
 // Return To createGetter: 检查map中是否有对应key，__proto__,__v_isRef,__isVue
 const isNonTrackableKeys = /*#__PURE__*/ makeMap(`__proto__,__v_isRef,__isVue`)
-
+// Set(13) {…}
+// [[Entries]]
+// 0:
+// value: Symbol(Symbol.asyncIterator)
+// 1:
+// value: Symbol(Symbol.hasInstance)
+// 2:
+// value: Symbol(Symbol.isConcatSpreadable)
+// 3:
+// value: Symbol(Symbol.iterator)
+// 4:
+// value: Symbol(Symbol.match)
+// 5:
+// value: Symbol(Symbol.matchAll)
+// 6:
+// value: Symbol(Symbol.replace)
+// 7:
+// value: Symbol(Symbol.search)
+// 8:
+// value: Symbol(Symbol.species)
+// 9:
+// value: Symbol(Symbol.split)
+// 10:
+// value: Symbol(Symbol.toPrimitive)
+// 11:
+// value: Symbol(Symbol.toStringTag)
+// 12:
+// value: Symbol(Symbol.unscopables)
+// From has:
+// Return To has: 13个内置的Symbol值的集合
 const builtInSymbols = new Set(
+  // 获取所有的Symbol值，有18个
   Object.getOwnPropertyNames(Symbol)
+    // 将18个值Symbol化
     .map(key => (Symbol as any)[key])
+    // 筛选出13个内置的Symbol值
     .filter(isSymbol)
 )
 
@@ -293,12 +325,20 @@ function deleteProperty(target: object, key: string | symbol): boolean {
   }
   return result
 }
-
+// From mutableHandlers:
+// Return To mutableHandlers: 如果不是Symbol值，就以HAS类型执行track收集依赖，并返回has操作的结果(has操作来自 in操作符)
 function has(target: object, key: string | symbol): boolean {
+  // 根据key是否在target上查找，如果在，返回true，否则返回false
   const result = Reflect.has(target, key)
+  // From has:
+  // To: builtInSymbols
+  // Return From builtInSymbols: 13个内置的Symbol值
+  // 如果key不是Symbol类型 或者 key不在builtInSymbols集合上
   if (!isSymbol(key) || !builtInSymbols.has(key)) {
+    // 以HAS操作进行track依赖收集，关联为key
     track(target, TrackOpTypes.HAS, key)
   }
+  // 返回has操作的结果
   return result
 }
 
@@ -316,6 +356,8 @@ export const mutableHandlers: ProxyHandler<object> = {
   // Return From createSetter: 返回set方法，内部会执行trigger方法触发依赖，执行相关联的副作用函数
   set,
   deleteProperty,
+  // To: has
+  // Return From has: 如果不是Symbol值，就以HAS类型执行track收集依赖，并返回has操作的结果(has操作来自 in操作符)
   has,
   ownKeys
 }
