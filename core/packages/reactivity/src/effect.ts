@@ -199,6 +199,7 @@ export function resetTracking() {
   shouldTrack = last === undefined ? true : last
 }
 // From createGetter:
+// Return To get: 创建依赖集合，trackEffects收集依赖
 export function track(target: object, type: TrackOpTypes, key: unknown) {
   // 判断shouldTrack和activeEffect
   if (shouldTrack && activeEffect) {
@@ -272,6 +273,7 @@ export function trackEffects(
   }
 }
 // From createSetter:
+// Return To set: 将相对应的副作用函数(effect)推入到deps数组中，然后triggerEffects去遍历执行副作用函数
 export function trigger(
   target: object,
   type: TriggerOpTypes,

@@ -82,6 +82,7 @@ function createArrayInstrumentations() {
   return instrumentations
 }
 // From get:
+// Return To get: 返回get方法，内部会执行track方法创建依赖集合，收集依赖到依赖集合中
 function createGetter(isReadonly = false, shallow = false) {
   // 返回get方法
   return function get(target: Target, key: string | symbol, receiver: object) {
@@ -140,7 +141,8 @@ function createGetter(isReadonly = false, shallow = false) {
     // 如果不是只读，才需要收集依赖，建立响应联系
     if (!isReadonly) {
       // From createGetter:
-      //todo To: track
+      // To: track
+      // Return From track: 创建依赖集合，trackEffects收集依赖
       track(target, TrackOpTypes.GET, key)
     }
     // 如果是shallow浅响应式，返回经过一次依赖收集的res
@@ -181,6 +183,7 @@ function createGetter(isReadonly = false, shallow = false) {
 const set = /*#__PURE__*/ createSetter()
 const shallowSet = /*#__PURE__*/ createSetter(true)
 // From set:
+// Return To Set: 返回set方法，内部会触发依赖，执行相关联的副作用函数
 function createSetter(shallow = false) {
   // 返回set方法
   return function set(
@@ -241,7 +244,9 @@ function createSetter(shallow = false) {
     if (target === toRaw(receiver)) {
       if (!hadKey) {
         // 如果没有hadkey为false，那么Trigger类型为ADD
-        //todo To: Trigger
+        // From createSetter:
+        // To: trigger
+        // Return From trigger: 将相对应的副作用函数(effect)推入到deps数组中，然后triggerEffects去遍历执行副作用函数
         trigger(target, TriggerOpTypes.ADD, key, value)
       } else if (hasChanged(value, oldValue)) {
         // From createSetter:
@@ -282,7 +287,10 @@ function ownKeys(target: object): (string | symbol)[] {
 // Return To createReactiveObject: 返回如下方法
 export const mutableHandlers: ProxyHandler<object> = {
   // To: createGetter
+  // Return From createGetter: 返回get方法，内部会执行track方法创建依赖集合，收集依赖到依赖集合中
   get,
+  // To: createSetter
+  // Return From createSetter: 返回set方法，内部会执行trigger方法触发依赖，执行相关联的副作用函数
   set,
   deleteProperty,
   has,
