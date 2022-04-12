@@ -121,27 +121,42 @@ function add(this: SetTypes, value: unknown) {
   // 返回添加后的集合
   return this
 }
-
+// From mutableInstrumentations:
+// Return To set: 判断key是否在target上，如果不在，用原始key去判断，之后执行set方法，
+// 在判断key是否在target上，如果在，并且新旧值发生改变，以SET类型执行trigger，以key为关联，将新旧值都传过去，
+// 如果不在，以ADD类型执行trigger，以key为关联，将value值传过去
 function set(this: MapTypes, key: unknown, value: unknown) {
+  // 获取原始value
   value = toRaw(value)
+  // 获取原始集合
   const target = toRaw(this)
+  // getProto获取target的原型对象，并从中解构出has和get方法
   const { has, get } = getProto(target)
-
+  // hadKey target是否有key，如果有为true，否则为false
   let hadKey = has.call(target, key)
+  // 判断hadKey
   if (!hadKey) {
+    // 如果hadKey为false,获取原始key
     key = toRaw(key)
+    // 再用原始key去判断hadKey
     hadKey = has.call(target, key)
   } else if (__DEV__) {
+    // DEV忽略
     checkIdentityKeys(target, has, key)
   }
-
+  // 获取oldValue
   const oldValue = get.call(target, key)
+  // 调用set方法
   target.set(key, value)
+  // 再判断hadKey
   if (!hadKey) {
+    // 如果为false，以ADD类型执行trigger，以key为关联，将value值传过去
     trigger(target, TriggerOpTypes.ADD, key, value)
   } else if (hasChanged(value, oldValue)) {
+    // 如果hadKey为true，并且新旧值发生改变，以SET类型执行trigger，以key为关联，将新旧值都传过去
     trigger(target, TriggerOpTypes.SET, key, value, oldValue)
   }
+  // 返回执行后的集合
   return this
 }
 
@@ -299,6 +314,11 @@ function createInstrumentations() {
     // Return From add: 如果value不在target上，执行target.add添加，以ADD类型执行trigger，以value为关联，将value值传过去，返回添加后的集合
     add,
     // set
+    // From mutableInstrumentations:
+    // To set:
+    // Return From set: 判断key是否在target上，如果不在，用原始key去判断，之后执行set方法，
+    // 在判断key是否在target上，如果在，并且新旧值发生改变，以SET类型执行trigger，以key为关联，将新旧值都传过去，
+    // 如果不在，以ADD类型执行trigger，以key为关联，将value值传过去
     set,
     // delte
     delete: deleteEntry,
