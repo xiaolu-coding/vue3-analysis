@@ -17,6 +17,7 @@ const toShallow = <T extends unknown>(value: T): T => value
 const getProto = <T extends CollectionTypes>(v: T): any =>
   Reflect.getPrototypeOf(v)
 // From mutableInstrumentations:
+// Return To mutableInstrumentations: 如果不是只读，以GET类型执行track,以key为关联，并根据target上是否有key或rawKey返回经过wrap包裹的值
 function get(
   target: MapTypes,
   key: unknown,
@@ -81,10 +82,14 @@ function has(this: CollectionTypes, key: unknown, isReadonly = false): boolean {
     ? target.has(key)
     : target.has(key) || target.has(rawKey)
 }
-
+// From mutableInstrumentations:
+// Return To mutableInstrumentations: 如果不是只读，以TrackOpTypes.ITERATE类型执行track，以ITERATE_KEY为关联 因为改变size会影响for in循环，因此用ITERATE_KEY，并返回Reflect.get size的返回值
 function size(target: IterableCollections, isReadonly = false) {
+  // 获取原始target
   target = (target as any)[ReactiveFlags.RAW]
+  // 如果不是只读 以TrackOpTypes.ITERATE类型执行track，以ITERATE_KEY为关联 因为改变size会影响for in循环，因此用ITERATE_KEY
   !isReadonly && track(toRaw(target), TrackOpTypes.ITERATE, ITERATE_KEY)
+  // 返回Reflect.get size的返回值
   return Reflect.get(target, 'size', target)
 }
 
@@ -255,10 +260,14 @@ function createInstrumentations() {
     // get方法
     // From mutableInstrumentations:
     // To get:
+    // Return From get: 如果不是只读，以GET类型执行track,以key为关联，并根据target上是否有key或rawKey返回经过wrap包裹的值
     get(this: MapTypes, key: unknown) {
       return get(this, key)
     },
     // size的getter
+    // From mutableInstrumentations:
+    // To size:
+    // Return From size: 如果不是只读，以TrackOpTypes.ITERATE类型执行track，以ITERATE_KEY为关联 因为改变size会影响for in循环，因此用ITERATE_KEY，并返回Reflect.get size的返回值
     get size() {
       return size(this as unknown as IterableCollections)
     },
