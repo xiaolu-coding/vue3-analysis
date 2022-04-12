@@ -193,20 +193,28 @@ function deleteEntry(this: CollectionTypes, key: unknown) {
   // 返回delete执行的结果
   return result
 }
-
+// From mutableInstrumentations:
+// Return To mutableInstrumentations: 执行clear，判断hadItems，如果为true,以CLEAR类型执行trigger，以undefined为关联，将undefined，oldTarget传过去,返回clear执行的结果
 function clear(this: IterableCollections) {
+  // 获取原始集合
   const target = toRaw(this)
+  // 判断是否有值  size !== 0 为true  size === 0 为fasle
   const hadItems = target.size !== 0
   const oldTarget = __DEV__
-    ? isMap(target)
+    ? // DEV忽略
+      isMap(target)
       ? new Map(target)
       : new Set(target)
     : undefined
   // forward the operation before queueing reactions
+  // 在queue reactions之前调用clear方法
   const result = target.clear()
+  // 判断hadItems
   if (hadItems) {
+    // 如果hadItems为true，以CLEAR类型执行trigger，以undefined为关联，将undefined，oldTarget传过去
     trigger(target, TriggerOpTypes.CLEAR, undefined, undefined, oldTarget)
   }
+  // 返回clear执行的结果
   return result
 }
 
@@ -342,6 +350,9 @@ function createInstrumentations() {
     // 返回delete执行的结果
     delete: deleteEntry,
     // clear
+    // From mutableInstrumentations:
+    // To clear:
+    // Return From clear: 执行clear，判断hadItems，如果为true,以CLEAR类型执行trigger，以undefined为关联，将undefined，oldTarget传过去,返回clear执行的结果
     clear,
     // forEach
     forEach: createForEach(false, false)
