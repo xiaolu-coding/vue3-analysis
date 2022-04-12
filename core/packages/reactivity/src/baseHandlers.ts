@@ -360,22 +360,27 @@ function ownKeys(target: object): (string | symbol)[] {
   return Reflect.ownKeys(target)
 }
 // From createReactiveObject:
-// Return To createReactiveObject: 返回如下方法
+// Return To createReactiveObject: 返回包含get、set、deleteProperty、ownKeys、has方法的对象
 export const mutableHandlers: ProxyHandler<object> = {
   // To: createGetter
   // Return From createGetter: 返回get方法，内部会执行track方法创建依赖集合，收集依赖到依赖集合中
+  // get触发
   get,
   // To: createSetter
   // Return From createSetter: 返回set方法，内部会执行trigger方法触发依赖，执行相关联的副作用函数
+  // set触发
   set,
   // To: deleteProperty:
   // Reutrn From deleteProperty: 如果target有相应的key值，并且删除成功，就以DELETE类型执行trigger触发依赖，key为关联，并将删除的老值传过去，并返回deleteProperty的操作结果
+  // deleteProperty触发
   deleteProperty,
   // To: has
   // Return From has: 如果不是Symbol值，就以HAS类型执行track收集依赖，并返回has操作的结果(has操作来自 in操作符)
+  // in 触发
   has,
   // To: ownKeys:
   // Retrun From ownKeys: 以ITERATE类型执行track收集依赖，如果操作目标是数组，则使用length属性作为key建立关联，如果不是数组是对象，则使用ITERATE_KEY建立关联
+  // for in触发
   ownKeys
 }
 // From createReactiveObject:
