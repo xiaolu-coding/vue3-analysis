@@ -326,8 +326,9 @@ const [
   shallowInstrumentations,
   shallowReadonlyInstrumentations
 ] = /* #__PURE__*/ createInstrumentations()
-
+// From mutableCollectionHandlers get:
 function createInstrumentationGetter(isReadonly: boolean, shallow: boolean) {
+  // 经过一系列判断获得instrumentations对象
   const instrumentations = shallow
     ? isReadonly
       ? shallowReadonlyInstrumentations
@@ -335,21 +336,28 @@ function createInstrumentationGetter(isReadonly: boolean, shallow: boolean) {
     : isReadonly
     ? readonlyInstrumentations
     : mutableInstrumentations
-
+  // 返回一个函数，这个函数就是get
   return (
     target: CollectionTypes,
     key: string | symbol,
     receiver: CollectionTypes
   ) => {
+    // 如果key是ReactiveFlags.IS_REACTIVE
     if (key === ReactiveFlags.IS_REACTIVE) {
+      // 返回!isReadonly
       return !isReadonly
+      // 如果key是ReactiveFlags.IS_READONLY
     } else if (key === ReactiveFlags.IS_READONLY) {
+      // 返回isReadonly
       return isReadonly
+      // 如果key是ReactiveFlags.RAW
     } else if (key === ReactiveFlags.RAW) {
+      // 返回target
       return target
     }
-
+    // 返回Reflect.get操作结果
     return Reflect.get(
+      // 如果instrumentations对象是否有key 并且key在target上，返回instrumentations[key]，否则返回target[key]
       hasOwn(instrumentations, key) && key in target
         ? instrumentations
         : target,
@@ -358,7 +366,7 @@ function createInstrumentationGetter(isReadonly: boolean, shallow: boolean) {
     )
   }
 }
-// From createReactiveObject
+// From createReactiveObject:
 export const mutableCollectionHandlers: ProxyHandler<CollectionTypes> = {
   // get方法来自createInstrumentationGetter方法
   get: /*#__PURE__*/ createInstrumentationGetter(false, false)
