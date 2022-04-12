@@ -159,24 +159,38 @@ function set(this: MapTypes, key: unknown, value: unknown) {
   // 返回执行后的集合
   return this
 }
-
+// From mutableInstrumentations:
+// Return To mutableInstrumentations: 判断key是否在target上，如果不在，用原始key去判断，之后执行delete方法
+// 如果key在target上，以DELETE类型执行trigger，以key为关联，将undefined，oldValue传过去
+// 返回delete执行的结果
 function deleteEntry(this: CollectionTypes, key: unknown) {
+  // 获取原始集合
   const target = toRaw(this)
+  // 解构出原型对象上的has和get方法
   const { has, get } = getProto(target)
+  // 判断key是否在target上，如果在，hadKey为true，如果不在hadKey为false
   let hadKey = has.call(target, key)
+  // 判断hadKey
   if (!hadKey) {
+    // 如果hadKey为false,获取原始key
     key = toRaw(key)
+    // 用原始key再去判断hadKey
     hadKey = has.call(target, key)
   } else if (__DEV__) {
+    // DEV忽略
     checkIdentityKeys(target, has, key)
   }
-
+  // 获取oldValue
   const oldValue = get ? get.call(target, key) : undefined
   // forward the operation before queueing reactions
+  // 在queue reactions之前调用delete方法
   const result = target.delete(key)
+  // 判断hadKey
   if (hadKey) {
+    // 如果key在target上，以DELETE类型执行trigger，以key为关联，将undefined，oldValue传过去
     trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
   }
+  // 返回delete执行的结果
   return result
 }
 
@@ -320,7 +334,12 @@ function createInstrumentations() {
     // 在判断key是否在target上，如果在，并且新旧值发生改变，以SET类型执行trigger，以key为关联，将新旧值都传过去，
     // 如果不在，以ADD类型执行trigger，以key为关联，将value值传过去
     set,
-    // delte
+    // delete
+    // From mutableInstrumentations:
+    // To deleteEntry:
+    // Return From deleteEntry: 判断key是否在target上，如果不在，用原始key去判断，之后执行delete方法
+    // 如果key在target上，以DELETE类型执行trigger，以key为关联，将undefined，oldValue传过去
+    // 返回delete执行的结果
     delete: deleteEntry,
     // clear
     clear,
