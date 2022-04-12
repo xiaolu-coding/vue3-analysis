@@ -217,22 +217,32 @@ function clear(this: IterableCollections) {
   // 返回clear执行的结果
   return result
 }
-
+// From mutableInstrumentations:
+// Return To mutableInstrumentations: 如果不是只读  以ITERATE类型执行track，以ITERATE_KEY为关联，返回forEach执行的结果
 function createForEach(isReadonly: boolean, isShallow: boolean) {
   return function forEach(
     this: IterableCollections,
     callback: Function,
     thisArg?: unknown
   ) {
+    // 获取集合
     const observed = this as any
+    // 获取原始集合
     const target = observed[ReactiveFlags.RAW]
+    // 获取原始target
     const rawTarget = toRaw(target)
+    // wrap包裹响应式
     const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive
+    // 如果不是只读  以ITERATE类型执行track，以ITERATE_KEY为关联
     !isReadonly && track(rawTarget, TrackOpTypes.ITERATE, ITERATE_KEY)
+    // 返回forEach执行的结果
     return target.forEach((value: unknown, key: unknown) => {
       // important: make sure the callback is
       // 1. invoked with the reactive map as `this` and 3rd arg
       // 2. the value received should be a corresponding reactive/readonly.
+      // 重要：确保回调是
+      // 1. 使用反应映射作为 `this` 和 3rd arg 调用
+      // 2. 收到的值应该是相应的反应/只读。
       return callback.call(thisArg, wrap(value), wrap(key), observed)
     })
   }
@@ -355,6 +365,9 @@ function createInstrumentations() {
     // Return From clear: 执行clear，判断hadItems，如果为true,以CLEAR类型执行trigger，以undefined为关联，将undefined，oldTarget传过去,返回clear执行的结果
     clear,
     // forEach
+    // From mutableInstrumentations:
+    // To createForEach:
+    // Return From crateForEach: 如果不是只读  以ITERATE类型执行track，以ITERATE_KEY为关联，返回forEach执行的结果
     forEach: createForEach(false, false)
   }
   // shallowInstrumentations对象
