@@ -222,23 +222,32 @@ function createReadonlyMethod(type: TriggerOpTypes): Function {
     return type === TriggerOpTypes.DELETE ? false : this
   }
 }
-
+// From createInstrumentationGetter:
 function createInstrumentations() {
+  // mutableInstrumentations是键类型为string，值类型为Function的对象
   const mutableInstrumentations: Record<string, Function> = {
+    // get方法
     get(this: MapTypes, key: unknown) {
       return get(this, key)
     },
+    // size的getter
     get size() {
       return size(this as unknown as IterableCollections)
     },
+    // has
     has,
+    // add
     add,
+    // set
     set,
+    // delte
     delete: deleteEntry,
+    // clear
     clear,
+    // forEach
     forEach: createForEach(false, false)
   }
-
+  // shallowInstrumentations对象
   const shallowInstrumentations: Record<string, Function> = {
     get(this: MapTypes, key: unknown) {
       return get(this, key, false, true)
@@ -253,7 +262,7 @@ function createInstrumentations() {
     clear,
     forEach: createForEach(false, true)
   }
-
+  // readonlyInstrumentations对象
   const readonlyInstrumentations: Record<string, Function> = {
     get(this: MapTypes, key: unknown) {
       return get(this, key, true)
@@ -270,7 +279,7 @@ function createInstrumentations() {
     clear: createReadonlyMethod(TriggerOpTypes.CLEAR),
     forEach: createForEach(true, false)
   }
-
+  // shallowReadonlyInstrumentations对象
   const shallowReadonlyInstrumentations: Record<string, Function> = {
     get(this: MapTypes, key: unknown) {
       return get(this, key, true, true)
@@ -287,7 +296,7 @@ function createInstrumentations() {
     clear: createReadonlyMethod(TriggerOpTypes.CLEAR),
     forEach: createForEach(true, true)
   }
-
+  // 通过createIterableMethod方法操作keys values entries Symbol.iterator迭代器方法
   const iteratorMethods = ['keys', 'values', 'entries', Symbol.iterator]
   iteratorMethods.forEach(method => {
     mutableInstrumentations[method as string] = createIterableMethod(
@@ -311,7 +320,7 @@ function createInstrumentations() {
       true
     )
   })
-
+  // 返回这四个对象
   return [
     mutableInstrumentations,
     readonlyInstrumentations,
@@ -319,7 +328,8 @@ function createInstrumentations() {
     shallowReadonlyInstrumentations
   ]
 }
-
+// From createInstrumentationGetter:
+// To createInstrumentations:
 const [
   mutableInstrumentations,
   readonlyInstrumentations,
@@ -335,7 +345,9 @@ function createInstrumentationGetter(isReadonly: boolean, shallow: boolean) {
       : shallowInstrumentations
     : isReadonly
     ? readonlyInstrumentations
-    : mutableInstrumentations
+    : // From createInstrumentationGetter:
+      // To mutableInstrumentations:
+      mutableInstrumentations
   // 返回一个函数，这个函数就是get
   return (
     target: CollectionTypes,
@@ -369,6 +381,8 @@ function createInstrumentationGetter(isReadonly: boolean, shallow: boolean) {
 // From createReactiveObject:
 export const mutableCollectionHandlers: ProxyHandler<CollectionTypes> = {
   // get方法来自createInstrumentationGetter方法
+  // From createReactiveObject: 
+  // To createInstrumentationGetter:
   get: /*#__PURE__*/ createInstrumentationGetter(false, false)
 }
 
