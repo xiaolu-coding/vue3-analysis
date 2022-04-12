@@ -100,16 +100,25 @@ function size(target: IterableCollections, isReadonly = false) {
   // 返回Reflect.get size的返回值
   return Reflect.get(target, 'size', target)
 }
-
+// From mutableInstrumentations:
+// Return To mutableInstrumentations: 如果value不在target上，执行target.add添加，以ADD类型执行trigger，以value为关联，将value值传过去，返回添加后的集合
 function add(this: SetTypes, value: unknown) {
+  // 原始value
   value = toRaw(value)
+  // 原始集合
   const target = toRaw(this)
+  // 获取target的原型对象
   const proto = getProto(target)
+  // 调用原型对象的has方法，判断value是否在target中，在的话为true，不在为fasle
   const hadKey = proto.has.call(target, value)
+  // 判断hadKey
   if (!hadKey) {
+    // 如果hadKey为false,执行target.add方法
     target.add(value)
+    // 以ADD类型执行trigger，以value为关联，将value值传过去
     trigger(target, TriggerOpTypes.ADD, value, value)
   }
+  // 返回添加后的集合
   return this
 }
 
@@ -285,6 +294,9 @@ function createInstrumentations() {
     // Return From has: 根据key是否等于原始key，以GET类型执行track,以key为关联以key或rawKey作为关联，判断key和rawKey是否相等，相等返回target.has(key)的结果，不相等返回target.has(key) || target.has(rawKey)的结果
     has,
     // add
+    // From mutableInstrumentations:
+    // To add:
+    // Return From add: 如果value不在target上，执行target.add添加，以ADD类型执行trigger，以value为关联，将value值传过去，返回添加后的集合
     add,
     // set
     set,
