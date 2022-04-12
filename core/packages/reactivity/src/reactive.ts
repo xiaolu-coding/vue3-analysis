@@ -285,10 +285,11 @@ export function markRaw<T extends object>(value: T): T {
   def(value, ReactiveFlags.SKIP, true)
   return value
 }
-// From RefImpl:
-// Return To RefImpl: 如果是对象，返回reactive(value)，如果不是对象，返回value
+// From RefImpl get:
+// Return To RefImpl get: 如果是对象，返回reactive(value)，如果不是对象，返回value
 export const toReactive = <T extends unknown>(value: T): T =>
   isObject(value) ? reactive(value) : value
-
+// From get:
+// Return To get: 如果是对象，返回readonly(value)，如果不是对象，返回value
 export const toReadonly = <T extends unknown>(value: T): T =>
   isObject(value) ? readonly(value as Record<any, any>) : value

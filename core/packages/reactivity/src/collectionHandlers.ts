@@ -9,12 +9,14 @@ type IterableCollections = Map<any, any> | Set<any>
 type WeakCollections = WeakMap<any, any> | WeakSet<any>
 type MapTypes = Map<any, any> | WeakMap<any, any>
 type SetTypes = Set<any> | WeakSet<any>
-
+// From get:
+// Return To get: 啥也没做，返回value值
 const toShallow = <T extends unknown>(value: T): T => value
-
+// From get:
+// Return To get: 返回对象原型
 const getProto = <T extends CollectionTypes>(v: T): any =>
   Reflect.getPrototypeOf(v)
-
+// From mutableInstrumentations:
 function get(
   target: MapTypes,
   key: unknown,
@@ -24,21 +26,45 @@ function get(
   // #1772: readonly(reactive(Map)) should return readonly + reactive version
   // of the value
   target = (target as any)[ReactiveFlags.RAW]
+  // 获取原始target
   const rawTarget = toRaw(target)
+  // 获取原始key
   const rawKey = toRaw(key)
+  // 如果key不等于原始key
   if (key !== rawKey) {
+    // 如果不是只读，以GET类型执行track,以key为关联
     !isReadonly && track(rawTarget, TrackOpTypes.GET, key)
   }
+  // 以GET类型执行track,以key为关联，以rawKey为关联
   !isReadonly && track(rawTarget, TrackOpTypes.GET, rawKey)
+  // From get:
+  // To getProto:
+  // Return From getProto: 返回对象原型
+  // 从rawTarget获取原型，并从原型中解构出has方法
   const { has } = getProto(rawTarget)
+  // From get:
+  // To toShallow:
+  // Return From toShallow: 啥也没做，返回value值
+  // To toReadOnly:
+  // Return From toReadOnly: 如果是对象，返回readonly(value)，如果不是对象，返回value
+  // To toReactive:
+  // Return From toReactive: 如果是对象，返回reactive(value)，如果不是对象，返回value
   const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive
+  // 如果rawTraget上有key
   if (has.call(rawTarget, key)) {
+    // 这里wrap是包裹一层响应式数据，避免数据污染
+    // 返回包裹响应式的target.get(key)
     return wrap(target.get(key))
+    // 如果rawTraget上有rawKey
   } else if (has.call(rawTarget, rawKey)) {
+    // 这里wrap是包裹一层响应式数据，避免数据污染
+    // 返回包裹响应式的target.get(rawKey)
     return wrap(target.get(rawKey))
+    // 如果target不等于rawTarget 不等于原始target
   } else if (target !== rawTarget) {
     // #3602 readonly(reactive(Map))
     // ensure that the nested reactive `Map` can do tracking for itself
+    // 确保嵌套的响应式 `Map` 可以自己进行跟踪
     target.get(key)
   }
 }
@@ -227,6 +253,8 @@ function createInstrumentations() {
   // mutableInstrumentations是键类型为string，值类型为Function的对象
   const mutableInstrumentations: Record<string, Function> = {
     // get方法
+    // From mutableInstrumentations:
+    // To get:
     get(this: MapTypes, key: unknown) {
       return get(this, key)
     },
