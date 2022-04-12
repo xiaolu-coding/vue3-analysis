@@ -69,15 +69,23 @@ function get(
     target.get(key)
   }
 }
-
+// From mutableInstrumentations:
+// Return To has: 根据key是否等于原始key，以GET类型执行track,以key为关联以key或rawKey作为关联，判断key和rawKey是否相等，相等返回target.has(key)的结果，不相等返回target.has(key) || target.has(rawKey)的结果
 function has(this: CollectionTypes, key: unknown, isReadonly = false): boolean {
+  // 获取原始target
   const target = (this as any)[ReactiveFlags.RAW]
+  // 原始traget
   const rawTarget = toRaw(target)
+  // 原始key
   const rawKey = toRaw(key)
+  // 如果key不等于原始key
   if (key !== rawKey) {
+    // 如果不是只读，以GET类型执行track,以key为关联
     !isReadonly && track(rawTarget, TrackOpTypes.HAS, key)
   }
+  // 以GET类型执行track,以key为关联，以rawKey为关联
   !isReadonly && track(rawTarget, TrackOpTypes.HAS, rawKey)
+  // 判断是否相等，相等返回target.has(key)的结果，不相等返回target.has(key) || target.has(rawKey)的结果
   return key === rawKey
     ? target.has(key)
     : target.has(key) || target.has(rawKey)
@@ -272,6 +280,9 @@ function createInstrumentations() {
       return size(this as unknown as IterableCollections)
     },
     // has
+    // From mutableInstrumentations:
+    // To has:
+    // Return From has: 根据key是否等于原始key，以GET类型执行track,以key为关联以key或rawKey作为关联，判断key和rawKey是否相等，相等返回target.has(key)的结果，不相等返回target.has(key) || target.has(rawKey)的结果
     has,
     // add
     add,
