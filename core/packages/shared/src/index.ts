@@ -54,6 +54,8 @@ export const hasOwn = (
 // From createGetter:
 // Return To createGetter: 返回Array.isArray 判断是否是数组类型
 export const isArray = Array.isArray
+// From createIterableMethod:
+// Return To createIterableMethod: 判断是否是map类型
 export const isMap = (val: unknown): val is Map<any, any> =>
   toTypeString(val) === '[object Map]'
 export const isSet = (val: unknown): val is Set<any> =>

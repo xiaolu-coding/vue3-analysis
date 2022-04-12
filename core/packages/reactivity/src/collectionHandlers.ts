@@ -260,7 +260,8 @@ interface IterationResult {
   value: any
   done: boolean
 }
-
+// From createInstrumentations:
+// Return To createInstrumentations: 如果不是只读，以ITERATE类型执行track，根据isKeyOnly决定以ITERATE_KEY或MAP_KEY_ITERATE_KEY为关联，返回一个包装的迭代器，它返回观察到的版本，实现可迭代协议
 function createIterableMethod(
   method: string | symbol,
   isReadonly: boolean,
@@ -270,14 +271,21 @@ function createIterableMethod(
     this: IterableCollections,
     ...args: unknown[]
   ): Iterable & Iterator {
+    // 获取原始对象
     const target = (this as any)[ReactiveFlags.RAW]
     const rawTarget = toRaw(target)
+    // From createIterableMethod:
+    // Return From createIterableMethod: 判断是否是map类型
     const targetIsMap = isMap(rawTarget)
+    // 如果是entries或是Sybol.iterator方法并且是map类型 为true
     const isPair =
       method === 'entries' || (method === Symbol.iterator && targetIsMap)
     const isKeyOnly = method === 'keys' && targetIsMap
+    // 获取原始迭代器方法
     const innerIterator = target[method](...args)
+    // wrap包裹函数
     const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive
+    // 如果不是只读，以ITERATE类型执行track，根据isKeyOnly决定以ITERATE_KEY或MAP_KEY_ITERATE_KEY为关联
     !isReadonly &&
       track(
         rawTarget,
@@ -286,18 +294,23 @@ function createIterableMethod(
       )
     // return a wrapped iterator which returns observed versions of the
     // values emitted from the real iterator
+    // 返回一个包装的迭代器，它返回观察到的版本
+    // 从实际迭代器发出的值
     return {
       // iterator protocol
       next() {
+        // 调用原始迭代器的next方法获取value和done
         const { value, done } = innerIterator.next()
         return done
+        // 如果done存在返回value和done
           ? { value, done }
-          : {
+          : { // 如果done不存在，value根据isPair决定返回什么 使用wrap包裹
               value: isPair ? [wrap(value[0]), wrap(value[1])] : wrap(value),
               done
             }
       },
       // iterable protocol
+      // 实现可迭代协议
       [Symbol.iterator]() {
         return this
       }
@@ -422,6 +435,9 @@ function createInstrumentations() {
   // 通过createIterableMethod方法操作keys values entries Symbol.iterator迭代器方法
   const iteratorMethods = ['keys', 'values', 'entries', Symbol.iterator]
   iteratorMethods.forEach(method => {
+    // From createInstrumentations:
+    // To createIterableMethod:
+    // Return From createIterableMethod: 如果不是只读，以ITERATE类型执行track，根据isKeyOnly决定以ITERATE_KEY或MAP_KEY_ITERATE_KEY为关联，返回一个包装的迭代器，它返回观察到的版本，实现可迭代协议
     mutableInstrumentations[method as string] = createIterableMethod(
       method,
       false,
