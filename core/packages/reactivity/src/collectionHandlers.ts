@@ -358,8 +358,9 @@ function createInstrumentationGetter(isReadonly: boolean, shallow: boolean) {
     )
   }
 }
-
+// From createReactiveObject
 export const mutableCollectionHandlers: ProxyHandler<CollectionTypes> = {
+  // get方法来自createInstrumentationGetter方法
   get: /*#__PURE__*/ createInstrumentationGetter(false, false)
 }
 

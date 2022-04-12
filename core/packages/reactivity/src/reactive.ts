@@ -235,6 +235,10 @@ function createReactiveObject(
   // To: baseHandlers
   const proxy = new Proxy(
     target,
+    // From: createReactiveObject
+    // To: baseHandlers
+    // Return From baseHandlers: 返回包含get、set、deleteProperty、ownKeys、has方法的对象
+    // To: collectionHandlers
     targetType === TargetType.COLLECTION ? collectionHandlers : baseHandlers
   )
   // 代理完之后，在proxyMap上收集代理对象，防止反复创建代理对象
