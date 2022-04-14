@@ -164,16 +164,16 @@ function createGetter(isReadonly = false, shallow = false) {
     ) {
       return target
     }
-    // 判断target是否是数组
     // From createGetter:
     // To isArray:
     // Retrun From isArray: 返回Array.isArray 判断是否是数组类型
+    // 判断target是否是数组
     const targetIsArray = isArray(target)
-    // 如果不是只读并且 target是数组类型 并且key存在于arrayInstrumentations上
-    // 那么返回定义在arrayInstrumentations上的方法 也就是重写的数组方法
     // From: createGetter:
     // To hasOwn:
     // Return From hasOwn: 判断对象是否有指定的属性
+    // 如果不是只读并且 target是数组类型 并且key存在于arrayInstrumentations上
+    // 那么返回定义在arrayInstrumentations上的方法 也就是重写的数组方法
     if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key)) {
       // 返回数组方法
       // From: createGetter:
@@ -183,13 +183,13 @@ function createGetter(isReadonly = false, shallow = false) {
     }
     // 使用Reflect是为了第三个参数的this
     const res = Reflect.get(target, key, receiver)
-    // 不应该在副作用函数与Symbol这类值之间建立响应联系，
-    // 如果key的类型是symbol，不需要收集依赖，返回
     // From crateGetter:
     // To isSymbol:
     // Return From isSymbol: 判断是否是Symbol类型
     // To isNonTrackableKeys:
     // Return From isNonTrackableKeys: 判断是否是非跟踪类型 __proto__,__v_isRef,__isVue
+    // 不应该在副作用函数与Symbol这类值之间建立响应联系，
+    // 如果key的类型是symbol，不需要收集依赖，返回
     if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
       return res
     }
@@ -204,10 +204,10 @@ function createGetter(isReadonly = false, shallow = false) {
     if (shallow) {
       return res
     }
-    // 如果是Ref，脱Ref
     // From createGetter:
     // To: isRef
     // Return From isRef: 判断r上是否有__v_isRef属性，判断是否是Ref
+    // 如果是Ref，脱Ref
     if (isRef(res)) {
       // ref unwrapping - does not apply for Array + integer key.
       // ref unwrapping - 不适用于 Array + integer key。
@@ -215,10 +215,10 @@ function createGetter(isReadonly = false, shallow = false) {
       // 脱ref
       return shouldUnwrap ? res.value : res
     }
-    // 如果是对象，根据readonly来决定怎么递归，深只读，深reactive
     // From createGetter:
     // To isObject:
     // Return From isObject: 判断是否是对象类型
+    // 如果是对象，根据readonly来决定怎么递归，深只读，深reactive
     if (isObject(res)) {
       // Convert returned value into a proxy as well. we do the isObject check
       // here to avoid invalid value warning. Also need to lazy access readonly
