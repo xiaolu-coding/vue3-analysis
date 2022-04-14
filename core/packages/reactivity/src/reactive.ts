@@ -188,7 +188,7 @@ export function shallowReadonly<T extends object>(target: T): Readonly<T> {
   )
 }
 // From reactive:
-// Reutrn To reactive: 返回经过proxy代理的对象，这个proxy代理取决于handlers
+// Reutrn To reactive: 返回经过proxy代理的对象，这个proxy代理对象内部的方法取决于handlers
 function createReactiveObject(
   target: Target,
   isReadonly: boolean,
@@ -205,8 +205,8 @@ function createReactiveObject(
   }
   // target is already a Proxy, return it.
   // exception: calling readonly() on a reactive object
-  // 目标已经是一个代理，返回它。
-  // 例外：在反应对象上调用 readonly()
+  // 如果目标已经是一个代理(响应式对象)，返回它。
+  // 例外：在reactive对象上调用 readonly() 不返回
   if (
     target[ReactiveFlags.RAW] &&
     !(isReadonly && target[ReactiveFlags.IS_REACTIVE])
@@ -214,22 +214,22 @@ function createReactiveObject(
     return target
   }
   // target already has corresponding Proxy
-  // 如果对象已经收集了依赖，直接返回，防止反复创建代理对象
+  // 如果对象在proxyMap上，直接返回，防止反复创建代理对象
   const existingProxy = proxyMap.get(target)
   if (existingProxy) {
     return existingProxy
   }
   // only a whitelist of value types can be observed.
   // 只能观察到值类型的白名单。
-  // INVALID是除了Object Array Map Set WeakMap WeakSet之外的类型
   // To: getTargetType:
   // Return From getTargetType: 获取target的类型
+  // INVALID是除了Object Array Map Set WeakMap WeakSet之外的类型，也就是除了这类型之外的类型，返回
   const targetType = getTargetType(target)
   if (targetType === TargetType.INVALID) {
     return target
   }
   // 执行Proxy代理，对target对象进行代理
-  // 会根据TargetType.COLLECTION来进行判断使用哪个handlers进行代理
+  // 会根据TargetType.COLLECTION判断使用哪个handlers进行代理
   // baseHandlers是一般值类型  collectionHandlers是map set这些类型
   // From: createReactiveObject
   // To: baseHandlers
@@ -243,7 +243,7 @@ function createReactiveObject(
   )
   // 代理完之后，在proxyMap上收集代理对象，防止反复创建代理对象
   proxyMap.set(target, proxy)
-  // 返回代理
+  // 返回proxy代理对象 此时proxy上面已经有了get、set、deleteProperty、ownKeys、has这些方法
   return proxy
 }
 
