@@ -249,21 +249,21 @@ function createSetter(shallow = false) {
   ): boolean {
     // 获取旧值
     let oldValue = (target as any)[key]
-    // 如果是只读并且Ref并且新值不是Ref，返回false
     // From createSetter:
     // To isReadonly:
     // Return From isReadonly: 判断是否是只读类型 根据据value上是否有ReactiveFlags.IS_READONLY属性判断
-    // To isRef: 
+    // To isRef:
     // Return From isRef: 判断是否是Ref类型 根据value上是否有__v_isRef属性判断
+    // 如果是只读并且Ref并且新值不是Ref，返回false
     if (isReadonly(oldValue) && isRef(oldValue) && !isRef(value)) {
       return false
     }
     // 如果shallow是false(浅响应式)，并且新值不是只读
     if (!shallow && !isReadonly(value)) {
-      // 如果新值也不是浅响应式
       // From createSetter:
       // To isShallow:
       // Return From isShallow: 判断是否是浅响应式 根据value上是否有ReactiveFlags.IS_SHALLOW属性判断
+      // 如果新值也不是浅响应式
       if (!isShallow(value)) {
         // From createSetter:
         // To: toRaw
@@ -283,10 +283,10 @@ function createSetter(shallow = false) {
     }
 
     const hadKey =
-      // 如果target是数组，并且key是数字(索引)
       // From createSetter:
       // To isIntegerKey:
       // Return From isIntegerKey: 判断是否是数字索引
+      // 如果target是数组，并且key是数字(索引)
       isArray(target) && isIntegerKey(key)
         ? // 如果索引小于数组长度，代表没有新增，就是SET类型，如果不小于数组长度，代表新增了，就是ADD类型
           Number(key) < target.length
@@ -298,16 +298,16 @@ function createSetter(shallow = false) {
     // target === toRaw(receiver)就说明receiver就是target的代理对象,此目的是为了屏蔽由原型引起的更新
     if (target === toRaw(receiver)) {
       if (!hadKey) {
-        // 如果没有hadkey为false，那么Trigger类型为ADD
         // From createSetter:
         // To: trigger
         // Return From trigger: 将相对应的副作用函数(effect)推入到deps数组中，然后triggerEffects去遍历执行副作用函数
+        // 如果hadkey为false，那么Trigger类型为ADD
         trigger(target, TriggerOpTypes.ADD, key, value)
       } else if (hasChanged(value, oldValue)) {
         // From createSetter:
         // To hasChanged:
         // Return From hasChanged: 比较新值和旧值是否发生了变化，包含对 NaN的判断。
-        // 如果新旧值发生了变化，就Trigger 类型为SET
+        // 如果新旧值发生了变化，那么Trigger 类型为SET
         trigger(target, TriggerOpTypes.SET, key, value, oldValue)
       }
     }
