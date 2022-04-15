@@ -747,7 +747,11 @@ export function handleSetupResult(
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
       instance.devtoolsRawSetupState = setupResult
     }
+    // From handleSetupResult:
+    // To proxyRefs:
+    // Return From proxyRefs: 如果是ref类型，返回一个新的ref代理对象，此代理对象上拥有get set方法，get方法返回ref.value，set方法赋值给ref.value，做一次代理，也就是模板内ref不用.value的原因
     // 如果是对象，直接把值赋给instance.setupState，这就是用户的setup内部的状态
+    // 并对ref做一层代理
     instance.setupState = proxyRefs(setupResult)
     if (__DEV__) {
       exposeSetupStateOnRenderContext(instance)

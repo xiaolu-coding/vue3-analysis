@@ -166,30 +166,50 @@ class RefImpl<T> {
 export function triggerRef(ref: Ref) {
   triggerRefValue(ref, __DEV__ ? ref.value : void 0)
 }
-
+// From shallowUnwrapHandlers:
+// Return To shallowUnwrapHandlers: 脱ref，也就是如果是ref类型，就返回ref.value，等于做了一层代理，也就是模板中的ref可以不用.value的原因
 export function unref<T>(ref: T | Ref<T>): T {
+  // 判断是否是ref类型  如果是的话返回ref.value 如果不是的话原样返回
   return isRef(ref) ? (ref.value as any) : ref
 }
-
+// From proxyRefs:
+// Return To proxyRefs: 
 const shallowUnwrapHandlers: ProxyHandler<any> = {
+  // From shallowUnwrapHandlers:
+  // To unref:
+  // Return From unref: 对ref做一层代理，也就是模板中的ref可以不用.value的原因
+  // get方法会返回ref.value  unref对ref做了一层代理，也就是模板中的ref可以不用.value的原因
   get: (target, key, receiver) => unref(Reflect.get(target, key, receiver)),
+  // 
   set: (target, key, value, receiver) => {
+    // 获取老值
     const oldValue = target[key]
+    // 如果老值是ref类型 并且新值不是ref类型
     if (isRef(oldValue) && !isRef(value)) {
+      // 将新值赋值给老值的value
       oldValue.value = value
       return true
     } else {
+      // 返回Reflect.set的返回结果
       return Reflect.set(target, key, value, receiver)
     }
   }
 }
-
+// From handleSetupResult:
+// Return To handleSetupResult: 如果是ref类型，返回一个新的ref代理对象，此代理对象上拥有get set方法，get方法返回ref.value，set方法赋值给ref.value，做一次代理，也就是模板内ref不用.value的原因
 export function proxyRefs<T extends object>(
   objectWithRefs: T
 ): ShallowUnwrapRef<T> {
+  // From proxyRefs:
+  // To isReactive:
+  // Return From isReactive: 根据value上是否有ReactiveFlags.IS_REACTIVE属性判断是否是只读
   return isReactive(objectWithRefs)
-    ? objectWithRefs
-    : new Proxy(objectWithRefs, shallowUnwrapHandlers)
+    ? // 如果是reactive对象，原样返回
+      objectWithRefs
+    : // From proxyRefs:
+      // To shallowUnwrapHandlers:
+      // Return From shallowUnwrapHandlers: 返回一个拥有get set方法的对象，get方法返回ref.value，set方法赋值给ref.value，做一次代理
+      new Proxy(objectWithRefs, shallowUnwrapHandlers)
 }
 
 export type CustomRefFactory<T> = (

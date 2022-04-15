@@ -246,11 +246,15 @@ function createReactiveObject(
   // 返回proxy代理对象 此时proxy上面已经有了get、set、deleteProperty、ownKeys、has这些方法
   return proxy
 }
-
+// From proxyRefs:
+// Return To proxyRefs: 根据value上是否有ReactiveFlags.IS_REACTIVE属性判断是否是只读
 export function isReactive(value: unknown): boolean {
+  // 如果是只读的
   if (isReadonly(value)) {
+    // 返回isReactive(原始值)
     return isReactive((value as Target)[ReactiveFlags.RAW])
   }
+  // 根据value上是否有ReactiveFlags.IS_REACTIVE属性判断是否是只读
   return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
 }
 // From createSetter:
