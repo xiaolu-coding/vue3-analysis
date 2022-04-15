@@ -177,7 +177,7 @@ function createGetter(isReadonly = false, shallow = false) {
     if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key)) {
       // 返回数组方法
       // From: createGetter:
-      //todo To: arrayInstrumentations
+      // To: arrayInstrumentations
       // 例如: 当执行arr.includes其实执行的是arrayInstrumentations.includes 这样就实现了重写数组方法
       return Reflect.get(arrayInstrumentations, key, receiver)
     }
