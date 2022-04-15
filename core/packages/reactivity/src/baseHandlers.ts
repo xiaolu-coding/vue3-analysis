@@ -258,7 +258,7 @@ function createSetter(shallow = false) {
     if (isReadonly(oldValue) && isRef(oldValue) && !isRef(value)) {
       return false
     }
-    // 如果shallow是false(浅响应式)，并且新值不是只读
+    // 如果shallow是false，并且新值不是只读
     if (!shallow && !isReadonly(value)) {
       // From createSetter:
       // To isShallow:
