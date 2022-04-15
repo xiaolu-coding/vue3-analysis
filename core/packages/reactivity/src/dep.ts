@@ -44,7 +44,7 @@ export const initDepMarkers = ({ deps }: ReactiveEffect) => {
   if (deps.length) {
     // 遍历dpes
     for (let i = 0; i < deps.length; i++) {
-      // 给每个dep的w属性进行 | 运算，代表相对应层次的已经收集依赖
+      // 给每个dep的w属性与trackOpBit(记录递归嵌套的层数)进行 | 运算，代表相对应层次的已经收集依赖
       deps[i].w |= trackOpBit // set was tracked
     }
   }

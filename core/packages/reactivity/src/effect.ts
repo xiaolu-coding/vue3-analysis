@@ -19,7 +19,7 @@ type KeyToDepMap = Map<any, Dep>
 const targetMap = new WeakMap<any, KeyToDepMap>()
 
 // The number of effects currently being tracked recursively.
-// 当前正在递归跟踪的效果数。
+// 当前正在递归跟踪的effects数。
 let effectTrackDepth = 0
 // 递归嵌套层数
 export let trackOpBit = 1
