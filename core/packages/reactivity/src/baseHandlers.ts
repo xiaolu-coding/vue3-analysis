@@ -335,14 +335,14 @@ function deleteProperty(target: object, key: string | symbol): boolean {
 // From mutableHandlers:
 // Return To mutableHandlers: 如果不是Symbol值，就以HAS类型执行track收集依赖，并返回has操作的结果(has操作来自 in操作符)
 function has(target: object, key: string | symbol): boolean {
-  // 根据key是否在target上查找，如果在，返回true，否则返回false
+  // key是否在target上，如果在，返回true，否则返回false
   const result = Reflect.has(target, key)
   // From has:
   // To: builtInSymbols
   // Return From builtInSymbols: 13个内置的Symbol值
   // 如果key不是Symbol类型 或者 key不在builtInSymbols集合上
   if (!isSymbol(key) || !builtInSymbols.has(key)) {
-    // 以HAS操作进行track依赖收集，关联为key
+    // 以HAS类型进行track依赖收集，关联为key
     track(target, TrackOpTypes.HAS, key)
   }
   // 返回has操作的结果
