@@ -1483,27 +1483,38 @@ function baseCreateRenderer(
         // updateComponent
         // This is triggered by mutation of component's own state (next: null)
         // OR parent calling processComponent (next: VNode)
+        // 这是由组件自身状态的突变触发的（下一个：null）
+        // 或父调用 processComponent（下一个：VNode）
+        // 获取next,bu,u, parent, vnode
         let { next, bu, u, parent, vnode } = instance
+        // 将next保存在在originNext中
         let originNext = next
         let vnodeHook: VNodeHook | null | undefined
         if (__DEV__) {
           pushWarningContext(next || instance.vnode)
         }
-
+        
         // Disallow component effect recursion during pre-lifecycle hooks.
+        // 在预生命周期钩子中禁止组件收集依赖
         toggleRecurse(instance, false)
+        // 判断next
         if (next) {
+          // 如果next存在，代表是父调用processComponent，将vnode.el赋值给next.el
           next.el = vnode.el
+          // 执行updateComponentPreRender
           updateComponentPreRender(instance, next, optimized)
         } else {
+          // 如果next为null，将vnode赋值给next
           next = vnode
         }
 
         // beforeUpdate hook
+        // 如果有beforeUpdate钩子，执行钩子
         if (bu) {
           invokeArrayFns(bu)
         }
         // onVnodeBeforeUpdate
+        // 执行onVnodeBeforeUpdate
         if ((vnodeHook = next.props && next.props.onVnodeBeforeUpdate)) {
           invokeVNodeHook(vnodeHook, parent, next, vnode)
         }
@@ -1513,6 +1524,7 @@ function baseCreateRenderer(
         ) {
           instance.emit('hook:beforeUpdate')
         }
+        // 可以开始收集依赖
         toggleRecurse(instance, true)
 
         // render
@@ -1520,11 +1532,14 @@ function baseCreateRenderer(
           startMeasure(instance, `render`)
         }
         // render，转换为vnode
+        // 执行renderComponentRoot，转换为vnode
         const nextTree = renderComponentRoot(instance)
         if (__DEV__) {
           endMeasure(instance, `render`)
         }
+        // 将subTree赋值给nextTree
         const prevTree = instance.subTree
+        // 将nextTree赋值给subTree
         instance.subTree = nextTree
 
         if (__DEV__) {
@@ -1545,6 +1560,7 @@ function baseCreateRenderer(
         if (__DEV__) {
           endMeasure(instance, `patch`)
         }
+        // 将nextTree.el赋值给next.el
         next.el = nextTree.el
         if (originNext === null) {
           // self-triggered update. In case of HOC, update parent component
@@ -1553,10 +1569,12 @@ function baseCreateRenderer(
           updateHOCHostEl(instance, nextTree.el)
         }
         // updated hook
+        // 如果有updated钩子，执行钩子
         if (u) {
           queuePostRenderEffect(u, parentSuspense)
         }
         // onVnodeUpdated
+        // 执行onVnodeUpdated
         if ((vnodeHook = next.props && next.props.onVnodeUpdated)) {
           queuePostRenderEffect(
             () => invokeVNodeHook(vnodeHook!, parent, next!, vnode),
