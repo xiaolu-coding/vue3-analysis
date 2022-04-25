@@ -1493,15 +1493,20 @@ function baseCreateRenderer(
         if (__DEV__) {
           pushWarningContext(next || instance.vnode)
         }
-        
+
         // Disallow component effect recursion during pre-lifecycle hooks.
         // 在预生命周期钩子中禁止组件收集依赖
+        // From componentUpdateFn:
+        // To toggleRecurse:
+        // Return From toggleRecurse: 给effect和update设置allowRecurse，值为传入的第二个参数allowed
         toggleRecurse(instance, false)
         // 判断next
         if (next) {
           // 如果next存在，代表是父调用processComponent，将vnode.el赋值给next.el
           next.el = vnode.el
           // 执行updateComponentPreRender
+          // From componentUpdateFn:
+          // To updateComponentPreRender:
           updateComponentPreRender(instance, next, optimized)
         } else {
           // 如果next为null，将vnode赋值给next
@@ -1631,23 +1636,29 @@ function baseCreateRenderer(
     // 执行一次componentUpdateFn，因为首次挂载，没有更新，所以直接进行render，patch渲染视图
     update()
   }  
-
+  // From componnentUpdateFn:
   const updateComponentPreRender = (
     instance: ComponentInternalInstance,
     nextVNode: VNode,
     optimized: boolean
   ) => {
+    // 将instance赋值给nextVnode.component
     nextVNode.component = instance
     const prevProps = instance.vnode.props
     instance.vnode = nextVNode
     instance.next = null
+    // 更新props属性
     updateProps(instance, nextVNode.props, prevProps, optimized)
+    // 更新slots属性
     updateSlots(instance, nextVNode.children, optimized)
-
+    // 停止收集依赖
     pauseTracking()
     // props update may have triggered pre-flush watchers.
     // flush them before the render update.
+    // props更新可能触发了预刷新观察者。
+    // 在渲染更新之前刷新它们。
     flushPreFlushCbs(undefined, instance.update)
+    // 开始收集依赖
     resetTracking()
   }
 
@@ -2410,11 +2421,13 @@ function baseCreateRenderer(
     createApp: createAppAPI(render, hydrate)
   }
 }
-
+// From componentUpdateFn:
+// Return To componentUpdateFn: 给effect和update设置allowRecurse，值为传入的第二个参数allowed
 function toggleRecurse(
   { effect, update }: ComponentInternalInstance,
   allowed: boolean
 ) {
+  // 给effect和update设置allowRecurse，值为传入的第二个参数allowed
   effect.allowRecurse = update.allowRecurse = allowed
 }
 
