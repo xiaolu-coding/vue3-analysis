@@ -1585,14 +1585,14 @@ function baseCreateRenderer(
 
     // create reactive effect for rendering
     // 创建更新机制 当发生更新时，触发依赖，这里就会执行上面注册的componentUpdateFn函数去更新
-    //todo To: new ReactiveEffect & queueJob
+    // new ReactiveEffect & queueJob
     const effect = (instance.effect = new ReactiveEffect(
       componentUpdateFn,
       () => queueJob(instance.update),
       instance.scope // track it in component's effect scope
     ))
     // 通过effect.run拿到我们的componentUpdateFn函数
-    //todo To: effect
+    // To: effect
     const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
     update.id = instance.uid
     // allowRecurse
