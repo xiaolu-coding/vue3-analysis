@@ -1648,6 +1648,8 @@ function baseCreateRenderer(
     instance.vnode = nextVNode
     instance.next = null
     // 更新props属性
+    // From updateComponentPreRender:
+    // To updateProps:
     updateProps(instance, nextVNode.props, prevProps, optimized)
     // 更新slots属性
     updateSlots(instance, nextVNode.children, optimized)

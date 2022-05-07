@@ -198,24 +198,27 @@ export function initProps(
   // 赋值attrs
   instance.attrs = attrs
 }
-
+// From updateComponentPreRender:
 export function updateProps(
   instance: ComponentInternalInstance,
   rawProps: Data | null,
   rawPrevProps: Data | null,
   optimized: boolean
 ) {
+  // 解构出props、attrs和vnode的patchFlag
   const {
     props,
     attrs,
     vnode: { patchFlag }
   } = instance
+  // 获取原始props
   const rawCurrentProps = toRaw(props)
   const [options] = instance.propsOptions
   let hasAttrsChanged = false
 
   if (
     // always force full diff in dev
+    // 总是在开发中强制完全差异
     // - #1942 if hmr is enabled with sfc component
     // - vite#872 non-sfc component used by sfc component
     !(
