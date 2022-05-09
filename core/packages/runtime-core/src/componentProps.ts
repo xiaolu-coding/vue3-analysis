@@ -233,7 +233,7 @@ export function updateProps(
       // Compiler-generated props & no keys change, just set the updated
       // the props.
       const propsToUpdate = instance.vnode.dynamicProps!
-      for (let i = 0; i < propsToUpdate.length; i++) {
+      for (let i = 0; i < propsToUpdate.length; i++) { 
         let key = propsToUpdate[i]
         // PROPS flag guarantees rawProps to be non-null
         const value = rawProps![key]
