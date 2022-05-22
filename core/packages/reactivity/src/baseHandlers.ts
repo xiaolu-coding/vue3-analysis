@@ -227,7 +227,7 @@ function createGetter(isReadonly = false, shallow = false) {
       // 这里是为了避免无效值警告。 还需要惰性访问只读
       // 并在此处进行反应以避免循环依赖。
       // From createGetter:
-      //todo To: readonly
+      //todo To: readonly 
       return isReadonly ? readonly(res) : reactive(res)
     }
     // 最后返回res
