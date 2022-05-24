@@ -231,7 +231,7 @@ function createGetter(isReadonly = false, shallow = false) {
       return isReadonly ? readonly(res) : reactive(res)
     }
     // 最后返回res
-    return res
+    return res 
   }
 }
 
