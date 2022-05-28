@@ -228,7 +228,7 @@ function createGetter(isReadonly = false, shallow = false) {
       // 并在此处进行反应以避免循环依赖。
       // From createGetter:
       //todo To: readonly 
-      return isReadonly ? readonly(res) : reactive(res)
+      return isReadonly ? readonly(res) : reactive(res) 
     }
     // 最后返回res
     return res 
